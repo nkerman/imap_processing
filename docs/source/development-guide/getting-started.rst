@@ -6,9 +6,39 @@ Getting Started
 Installing requirements
 -----------------------
 
-``imap-processing`` uses :ref:`poetry-link` for dependency management. Check out our :ref:`style guide <poetry-environment>` for specific IMAP Poetry usage.
+Poetry Installation and Setup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To install using Poetry for development:
+``imap-processing`` uses :ref:`poetry-link` for dependency management. Check out our :ref:`style guide <poetry-environment>` for more information on specific IMAP Poetry usage.
+
+If you're running locally, you can install the Python requirements with Poetry.
+
+To setup versioning *(recommended for developers)*
+
+.. code-block:: bash
+
+    poetry self add poetry-dynamic-versioning
+
+To install without the extras
+
+.. code-block:: bash
+
+    poetry install
+
+To install all extras
+
+.. code-block:: bash
+
+    poetry install --all-extras
+
+This will install the dependencies from `poetry.lock`, ensuring that consistent versions are used. Poetry also provides a virtual environment, which you will have to activate.
+
+.. code-block:: bash
+
+    poetry shell
+
+
+In summary, the expected setup of ``Poetry`` for a development environment is:
 
 .. code-block:: bash
 
