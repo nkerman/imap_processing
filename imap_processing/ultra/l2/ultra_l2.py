@@ -25,7 +25,10 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
         L2 output dataset.
     """
     logger.info("Running ultra_l2 function")
+    num_dps_pointings = len(l1c_products)
+    logger.info(f"Number of DPS Pointings: {num_dps_pointings}")
+    logger.info(l1c_products[0])
 
 
 if __name__ == "__main__":
-    logger.warning("Running ultra_l2 module as __main__")
+    logger.info("Running ultra_l2 module as __main__")
