@@ -494,6 +494,7 @@ def basis_vectors(
 
 def cartesian_to_spherical(
     v: NDArray,
+    degrees: bool = True,
 ) -> NDArray:
     """
     Convert cartesian coordinates to spherical coordinates.
@@ -504,6 +505,9 @@ def cartesian_to_spherical(
         A NumPy array with shape (n, 3) where each
         row represents a vector
         with x, y, z-components.
+    degrees : bool
+        If True, the azimuth and elevation angles are returned in degrees.
+        Defaults to True.
 
     Returns
     -------
@@ -528,9 +532,12 @@ def cartesian_to_spherical(
 
     # Ensure azimuth is from 0 to 2PI
     az = az % (2 * np.pi)
-    spherical_coords = np.stack(
-        (np.squeeze(magnitude_v), np.degrees(az), np.degrees(el)), axis=-1
-    )
+
+    if degrees:
+        az = np.degrees(az)
+        el = np.degrees(el)
+
+    spherical_coords = np.stack((np.squeeze(magnitude_v), az, el), axis=-1)
 
     return spherical_coords
 
