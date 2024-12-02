@@ -40,3 +40,33 @@ def test_build_solid_angle_map_invalid_spacing(spacing, match_str):
         _ = l2_utils.build_solid_angle_map(
             spacing, input_degrees=True, output_degrees=False
         )
+
+
+@pytest.mark.parametrize("spacing", valid_spacings)
+def test_build_az_el_grid(spacing):
+    """Test build_az_el_grid function."""
+    az_range, el_range, az_grid, el_grid = l2_utils.build_az_el_grid(
+        spacing=spacing,
+        input_degrees=True,
+        output_degrees=True,
+        centered_azimuth=False,
+        centered_elevation=True,
+    )
+
+    # Size checks
+    assert az_range.size == int(360 / spacing)
+    assert el_range.size == int(180 / spacing)
+    assert az_range.size == az_grid.shape[1]
+    assert el_range.size == el_grid.shape[0]
+
+    # Check grid values
+    expected_az_range = np.arange((spacing / 2), 360 + (spacing / 2), spacing)
+    expected_el_range = np.arange(-90 + (spacing / 2), 90 + (spacing / 2), spacing)[
+        ::-1
+    ]  # Note el order is reversed
+    assert np.allclose(az_range, expected_az_range), (
+        f"Expected azimuth range: {expected_az_range}, " f"but got: {az_range}"
+    )
+    assert np.allclose(el_range, expected_el_range), (
+        f"Expected elevation range: {expected_el_range}, " f"but got: {el_range}"
+    )
