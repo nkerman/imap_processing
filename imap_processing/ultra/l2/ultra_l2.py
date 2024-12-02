@@ -445,7 +445,3 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
     )
 
     return ds_l2
-
-
-if __name__ == "__main__":
-    logger.info("Running ultra_l2 module as __main__")
