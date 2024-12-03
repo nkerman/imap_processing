@@ -1,9 +1,10 @@
 """Tests coverage for ultra_l2.py"""
 
 import logging
-from os import environ
+import typing
 
 import numpy as np
+import pytest
 import spiceypy as spice
 import xarray as xr
 
@@ -11,12 +12,7 @@ from imap_processing.spice.kernels import ensure_spice
 from imap_processing.ultra.l1c.ultra_l1c_pset_bins import build_energy_bins
 from imap_processing.ultra.l2 import ultra_l2
 
-environ["SPICE_METAKERNEL"] = (
-    "/Users/nake7532/Projects/IMAP/imap_processing/imap_processing/tests/"
-    "spice/test_data/imap_ena_sim_metakernel_nkerman.tm"
-)
 DEFAULT_SPACING_DEG = 0.5
-# %%
 
 # TODO: remove this where we set logger info to show
 logging.basicConfig(level=logging.INFO)
@@ -115,13 +111,117 @@ def mock_l1c_pset_product(
     return pset_product
 
 
-def test_is_ultra45(caplog):
-    """Test is_ultra45 function."""
-    assert ultra_l2.is_ultra45(mock_l1c_pset_product(head="45"))
-    assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="90"))
-    assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="90"))
+class TestUltraL2:
+    @typing.no_type_check
+    @pytest.fixture()
+    def _setup_l1c_pset_products(self):
+        self.l1c_spatial_bin_spacing_deg = 1.0
+        self.l1c_products = [
+            mock_l1c_pset_product(
+                stripe_center_lon_bin=mid_longitude,
+                num_lat_bins=int(180 / self.l1c_spatial_bin_spacing_deg),
+                num_lon_bins=int(360 / self.l1c_spatial_bin_spacing_deg),
+                timestr=f"2025-01-{i + 1:02d}T12:00:00",
+                head=("45" if (i % 2 == 0) else "90"),
+            )
+            for i, mid_longitude in enumerate(
+                np.arange(0, int(360 / self.l1c_spatial_bin_spacing_deg), 90)
+            )
+        ]
 
-    # If neither 45 nor 90: Raises warning, returns False
-    with caplog.at_level(logging.WARNING):
-        assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="123456789"))
-        assert "Found neither 45, nor 90 in descriptor string" in caplog.text
+    def test_is_ultra45(self, caplog):
+        """Test is_ultra45 function."""
+        assert ultra_l2.is_ultra45(mock_l1c_pset_product(head="45"))
+        assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="90"))
+        assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="90"))
+
+        # If neither 45 nor 90: Raises warning, returns False
+        with caplog.at_level(logging.WARNING):
+            assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="123456789"))
+            assert "Found neither 45, nor 90 in descriptor string" in caplog.text
+
+    @pytest.mark.external_kernel()
+    @pytest.mark.use_test_metakernel("imap_ultra_test_metakernel.template")
+    def test_project_inertial_frame_to_dps(
+        self,
+    ):
+        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
+        spacing_deg = 1
+        (
+            az_grid,
+            el_grid,
+            flat_indices_helio,
+            flat_indices_dps,
+            hae_az_in_dps_az,
+            hae_el_in_dps_el,
+            hae_az_in_dps_az_indices,
+            hae_el_in_dps_el_indices,
+        ) = ultra_l2.project_inertial_frame_to_dps(
+            event_time=et,
+            spacing_deg=spacing_deg,
+        )
+
+        # Shape checks
+        assert az_grid.shape == el_grid.shape == (180, 360)  # Will change if unwrapped
+        assert flat_indices_helio.shape == flat_indices_dps.shape == (180 * 360,)
+        assert hae_az_in_dps_az.shape == hae_el_in_dps_el.shape == (180 * 360,)
+        assert (
+            hae_az_in_dps_az_indices.shape
+            == hae_el_in_dps_el_indices.shape
+            == (180 * 360,)
+        )
+
+        # Value range checks
+        # flat indices helio should be the range from 0 to 180*360
+        # Those flat indices projected into the dps frame should be within that range
+        assert np.array_equal(flat_indices_helio, np.arange(180 * 360))
+        assert flat_indices_dps.min() >= 0
+        assert flat_indices_dps.max() <= 360 * 180
+
+        # Az and el should be within the expected ranges once projected to DPS
+        assert hae_az_in_dps_az.min() >= 0
+        assert hae_az_in_dps_az.max() <= np.pi * 2
+        assert hae_el_in_dps_el.min() >= -np.pi / 2
+        assert hae_el_in_dps_el.max() <= np.pi / 2
+
+    @pytest.mark.external_kernel()
+    @pytest.mark.use_test_metakernel("imap_ultra_test_metakernel.template")
+    @pytest.mark.use_fixtures("_setup_l1c_pset_products")
+    def test_build_dps_combined_exposure_time(self):
+        # TODO: Currently, the code only works w same spacing for target and source grid
+        spacing_deg = self.l1c_spatial_bin_spacing_deg
+
+        (combined_exptime_45, combined_exptime_90, combined_exptime_total) = (
+            ultra_l2.build_dps_combined_exposure_time(
+                self.l1c_products, spacing_deg=spacing_deg
+            )
+        )
+
+        assert (
+            combined_exptime_45.shape
+            == combined_exptime_90.shape
+            == combined_exptime_total.shape
+            == (180 / spacing_deg, 360 / spacing_deg)
+        )
+
+        # Because we set exptime to be bands of 1 on background of 0:
+        # The min exptime should be >= 0*, the max should be <= number of l1c_products
+        # The max of the 45 and 90 combined should be <= the number of l1c_products
+        # with that head.
+        # NOTE: *The min exptime is 0 currently, but could be unexpectedly
+        # made >0 if the l1c_products geometry are changed in the fixture above.
+        assert combined_exptime_total.min() == 0
+        assert combined_exptime_total.max() <= len(self.l1c_products)
+        assert combined_exptime_45.min() == 0
+        assert combined_exptime_45.max() <= len(
+            [p for p in self.l1c_products if ultra_l2.is_ultra45(p)]
+        )
+        assert combined_exptime_90.min() == 0
+        assert combined_exptime_90.max() <= len(
+            [p for p in self.l1c_products if not ultra_l2.is_ultra45(p)]
+        )
+
+        assert np.array_equal(
+            combined_exptime_total,
+            combined_exptime_45 + combined_exptime_90,
+        )
