@@ -115,7 +115,7 @@ class TestUltraL2:
     @typing.no_type_check
     @pytest.fixture()
     def _setup_l1c_pset_products(self):
-        self.l1c_spatial_bin_spacing_deg = 1.0
+        self.l1c_spatial_bin_spacing_deg = 1
         self.l1c_products = [
             mock_l1c_pset_product(
                 stripe_center_lon_bin=mid_longitude,
@@ -186,7 +186,7 @@ class TestUltraL2:
 
     @pytest.mark.external_kernel()
     @pytest.mark.use_test_metakernel("imap_ultra_test_metakernel.template")
-    @pytest.mark.use_fixtures("_setup_l1c_pset_products")
+    @pytest.mark.usefixtures("_setup_l1c_pset_products")
     def test_build_dps_combined_exposure_time(self):
         # TODO: Currently, the code only works w same spacing for target and source grid
         spacing_deg = self.l1c_spatial_bin_spacing_deg
