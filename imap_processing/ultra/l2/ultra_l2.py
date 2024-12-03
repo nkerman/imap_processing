@@ -75,6 +75,8 @@ def project_inertial_frame_to_dps(
     """
     Project an az/el grid in an inertial frame (ECLIPJ2000) to the DPS frame.
 
+    # TODO: Likely replace J2000 with HAE frame
+
     Parameters
     ----------
     event_time : float
@@ -149,9 +151,9 @@ def project_inertial_frame_to_dps(
         (hae_az_in_dps_az / (2 * np.pi)) * (360 / spacing_deg)
     ).astype(int)
     hae_el_in_dps_el_indices = np.floor(
+        # NOTE: equiv to: (np.pi/2 - hae_el_in_dps_el) * ((180 / np.pi) / spacing_deg)
         (0.5 - hae_el_in_dps_el / np.pi) * (180 / spacing_deg)
     ).astype(int)
-
     flat_indices_dps = np.ravel_multi_index(
         multi_index=(hae_az_in_dps_az_indices, hae_el_in_dps_el_indices),
         dims=az_grid.T.shape,
@@ -176,7 +178,7 @@ def project_inertial_frame_to_dps(
 def build_dps_combined_exposure_time(
     l1c_products: list[xr.Dataset],
     spacing_deg: float = DEFAULT_SPACING_DEG,
-) -> tuple[NDArray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """
     Build exposure time and time-averaged sensitivity maps on ecliptic inertial grid.
 
@@ -196,15 +198,18 @@ def build_dps_combined_exposure_time(
         - Exposure time (combined across l1c products) for both sensors added together
     """
     num_dps_pointings = len(l1c_products)
-    (num_el, num_az, num_energy) = l1c_products[0].counts.shape
+    (num_el_bins_l1c, num_az_bins_l1c, num_energy_bins_l1c) = l1c_products[
+        0
+    ].counts.shape
     logger.info(
         f"Number of DPS Pointings: {num_dps_pointings}. "
-        f"Shape is {num_el} el x {num_az} az x {num_energy} energy"
+        f"Shape is {num_el_bins_l1c} el x {num_az_bins_l1c} "
+        f"az x {num_energy_bins_l1c} energy"
     )
 
     # Setup the combined-across-pointings exp time arrays, in ecliptic inertial frame
-    combined_exptime_45 = np.zeros((num_el, num_az))
-    combined_exptime_90 = np.zeros((num_el, num_az))
+    combined_exptime_45 = np.zeros((num_el_bins_l1c, num_az_bins_l1c))
+    combined_exptime_90 = np.zeros((num_el_bins_l1c, num_az_bins_l1c))
 
     # Create ecliptic inertial grid onto which we will project the individual DPS frames
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
@@ -236,6 +241,7 @@ def build_dps_combined_exposure_time(
         ) = project_inertial_frame_to_dps(
             event_time=time,
             existing_grids=(az_grid, el_grid),
+            spacing_deg=spacing_deg,
         )
 
         # Add to the combined exposure time arrays
@@ -244,11 +250,11 @@ def build_dps_combined_exposure_time(
         ]
         if is_ultra45(l1c_prod):
             combined_exptime_45 += pointing_projected_exptime.reshape(
-                num_el, num_az, order="F"
+                num_el_bins_l1c, num_az_bins_l1c, order="F"
             )
         else:
             combined_exptime_90 += pointing_projected_exptime.reshape(
-                num_el, num_az, order="F"
+                num_el_bins_l1c, num_az_bins_l1c, order="F"
             )
 
     combined_exptime_total = combined_exptime_45 + combined_exptime_90
@@ -342,7 +348,7 @@ def build_flux_maps(
         )
 
     (combined_exptime_45, combined_exptime_90, combined_exptime_total) = (
-        build_dps_combined_exposure_time(l1c_products, frame_epochs)
+        build_dps_combined_exposure_time(l1c_products, spacing_deg)
     )
 
     energy_centers_from_file = l1c_products[0].energy_bin_center.values
@@ -369,9 +375,6 @@ def build_flux_maps(
             f"= {spice.et2utc(time, 'ISOC', 3)}"
         )
 
-        # TODO: reset the frame definition for the appropriate Pointing
-        # I'm not sure where to get the various spice kernels
-
         (
             az_grid,
             el_grid,
@@ -387,6 +390,7 @@ def build_flux_maps(
         )
 
         # TODO: Replace with sum of counts across all l1c products on an inertial grid
+        # Leaving this as placeholder
         combined_counts += 1
 
     # TODO: this will be removed in the final version
