@@ -75,7 +75,7 @@ def project_inertial_frame_to_dps(
     """
     Project an az/el grid in an inertial frame (ECLIPJ2000) to the DPS frame.
 
-    # TODO: Likely replace J2000 with HAE frame
+    # TODO: Likely replace J2000 with HAE frame (everywhere it occurs)
 
     Parameters
     ----------
@@ -115,13 +115,17 @@ def project_inertial_frame_to_dps(
     else:
         az_grid, el_grid = existing_grids
 
+    # Unwrap the grid to a 1D array for same interface as tessellation
+    az_grid_raveled = az_grid.ravel(order="F")
+    el_grid_raveled = el_grid.ravel(order="F")
+
     radii_helio = geometry.spherical_to_cartesian(
         np.stack(
-            (np.ones(az_grid.size), az_grid.ravel(order="F"), el_grid.ravel(order="F")),
+            (np.ones_like(az_grid_raveled), az_grid_raveled, el_grid_raveled),
             axis=-1,
         )
     )
-    flat_indices_helio = np.arange(az_grid.size)
+    flat_indices_helio = np.arange(az_grid_raveled.size)
 
     # TODO: reset the frame definition for the appropriate Pointing
     # I'm not sure where to get the various spice kernels
@@ -154,16 +158,18 @@ def project_inertial_frame_to_dps(
         # NOTE: equiv to: (np.pi/2 - hae_el_in_dps_el) * ((180 / np.pi) / spacing_deg)
         (0.5 - hae_el_in_dps_el / np.pi) * (180 / spacing_deg)
     ).astype(int)
+
+    # TODO: This method of matching indices 1:1 is rectangular grid-focused
+    # It will not work with a tessellation (e.g. Healpix)
     flat_indices_dps = np.ravel_multi_index(
         multi_index=(hae_az_in_dps_az_indices, hae_el_in_dps_el_indices),
         dims=az_grid.T.shape,
         order="F",  # MATLAB uses Fortran order, which we replicate here
     )
 
-    # TODO: we should be able to trim these outputs significantly
     return (
-        az_grid,
-        el_grid,
+        az_grid_raveled,
+        el_grid_raveled,
         flat_indices_helio,
         flat_indices_dps,
         hae_az_in_dps_az,
@@ -208,8 +214,8 @@ def build_dps_combined_exposure_time(
     )
 
     # Setup the combined-across-pointings exp time arrays, in ecliptic inertial frame
-    combined_exptime_45 = np.zeros((num_el_bins_l1c, num_az_bins_l1c))
-    combined_exptime_90 = np.zeros((num_el_bins_l1c, num_az_bins_l1c))
+    combined_exptime_45 = np.zeros(num_el_bins_l1c * num_az_bins_l1c)
+    combined_exptime_90 = np.zeros(num_el_bins_l1c * num_az_bins_l1c)
 
     # Create ecliptic inertial grid onto which we will project the individual DPS frames
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
@@ -230,8 +236,8 @@ def build_dps_combined_exposure_time(
         # TODO: Reset the frame definition for the appropriate Pointing
 
         (
-            az_grid,
-            el_grid,
+            az_grid_raveled,
+            el_grid_raveled,
             flat_indices_helio,
             flat_indices_dps,
             hae_az_in_dps_az,
@@ -249,13 +255,9 @@ def build_dps_combined_exposure_time(
             flat_indices_dps
         ]
         if is_ultra45(l1c_prod):
-            combined_exptime_45 += pointing_projected_exptime.reshape(
-                num_el_bins_l1c, num_az_bins_l1c, order="F"
-            )
+            combined_exptime_45 += pointing_projected_exptime
         else:
-            combined_exptime_90 += pointing_projected_exptime.reshape(
-                num_el_bins_l1c, num_az_bins_l1c, order="F"
-            )
+            combined_exptime_90 += pointing_projected_exptime
 
     combined_exptime_total = combined_exptime_45 + combined_exptime_90
 
@@ -282,6 +284,9 @@ def build_flux_maps(
     tuple[NDArray]
         Tuple of the following arrays:
         - Combined counts for each energy bin
+        - Combined exposure time for both sensors
+        - Combined exposure time for 45 degree sensor
+        - Combined exposure time for 90 degree sensor
         - Frame epochs
         - Energy bin widths
         - Energy bin edges
@@ -318,7 +323,7 @@ def build_flux_maps(
     (num_el, num_az, num_energy) = l1c_products[0].counts.shape
 
     # This will contain the counts for each energy bin
-    combined_counts = np.zeros((num_el, num_az, num_energy))
+    combined_counts = np.zeros((num_el * num_az, num_energy))
 
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
     (az_range, el_range, az_grid, el_grid) = l2_utils.build_az_el_grid(
@@ -369,15 +374,16 @@ def build_flux_maps(
     if not np.all(energy_delta >= 0):
         raise ValueError("Energy bin edges must be monotonically increasing.")
 
-    for time_index, time in enumerate(frame_epochs):
+    for prod_num, l1c_prod in enumerate(l1c_products):
+        time = float(l1c_prod.epoch.values)
         logger.info(
-            f"Processing frame at time index {time_index} with epoch {time} "
-            f"= {spice.et2utc(time, 'ISOC', 3)}"
+            f"Projecting exposure time from product at time index {prod_num} "
+            f"with epoch {time} = {spice.et2utc(time, 'ISOC', 3)}"
         )
 
         (
-            az_grid,
-            el_grid,
+            az_grid_raveled,
+            el_grid_raveled,
             flat_indices_helio,
             flat_indices_dps,
             hae_az_in_dps_az,
@@ -390,14 +396,19 @@ def build_flux_maps(
         )
 
         # TODO: Replace with sum of counts across all l1c products on an inertial grid
-        # Leaving this as placeholder
-        combined_counts += 1
+        pointing_projected_counts = l1c_prod.counts.values.reshape(
+            -1, l1c_prod.counts.shape[-1], order="F"
+        )[flat_indices_dps, :]
+
+        combined_counts += pointing_projected_counts
 
     # TODO: this will be removed in the final version
     # Output the last pointing's data for use in development and testing
     developer_dict = {
         "az_grid": az_grid,
         "el_grid": el_grid,
+        "az_grid_raveled": az_grid_raveled,
+        "el_grid_raveled": el_grid_raveled,
         "hae_az_in_dps_az": hae_az_in_dps_az,
         "hae_el_in_dps_el": hae_el_in_dps_el,
         "hae_az_in_dps_az_indices": hae_az_in_dps_az_indices,
@@ -407,6 +418,9 @@ def build_flux_maps(
 
     return (
         combined_counts,
+        combined_exptime_total,
+        combined_exptime_45,
+        combined_exptime_90,
         frame_epochs,
         energy_delta,
         energy_bin_edges,
@@ -437,13 +451,31 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
     logger.info(f"Number of DPS Pointings: {num_dps_pointings}")
 
     # TODO: Replace with full Dataset creation
-    combined_counts, frame_epochs = build_flux_maps(
-        l1c_products, spacing_deg=DEFAULT_SPACING_DEG
-    )[0:2]
+    (
+        combined_counts,
+        combined_exptime_total,
+        combined_exptime_45,
+        combined_exptime_90,
+        frame_epochs,
+        energy_delta,
+        energy_bin_edges,
+        energy_midpoints,
+        solid_angle_grid,
+        developer_dict,
+    ) = build_flux_maps(l1c_products, spacing_deg=DEFAULT_SPACING_DEG)
+
+    # Rewrap the vars into grids:
+    combined_counts = l2_utils.rewrap_even_spaced_el_az_grid(
+        combined_counts, extra_axis=True
+    )
+    combined_exptime_total = l2_utils.rewrap_even_spaced_el_az_grid(
+        combined_exptime_total, extra_axis=False
+    )
 
     ds_l2 = xr.Dataset(
         {
             "counts": (["el", "az", "energy"], combined_counts),
+            "exposure_time": (["el", "az"], combined_exptime_total),
         },
         attrs={"epochs": frame_epochs},
     )

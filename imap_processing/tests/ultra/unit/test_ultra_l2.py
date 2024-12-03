@@ -148,8 +148,8 @@ class TestUltraL2:
         et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
         spacing_deg = 1
         (
-            az_grid,
-            el_grid,
+            az_grid_raveled,
+            el_grid_raveled,
             flat_indices_helio,
             flat_indices_dps,
             hae_az_in_dps_az,
@@ -162,7 +162,7 @@ class TestUltraL2:
         )
 
         # Shape checks
-        assert az_grid.shape == el_grid.shape == (180, 360)  # Will change if unwrapped
+        assert az_grid_raveled.shape == el_grid_raveled.shape == (180 * 360,)
         assert flat_indices_helio.shape == flat_indices_dps.shape == (180 * 360,)
         assert hae_az_in_dps_az.shape == hae_el_in_dps_el.shape == (180 * 360,)
         assert (
@@ -201,7 +201,7 @@ class TestUltraL2:
             combined_exptime_45.shape
             == combined_exptime_90.shape
             == combined_exptime_total.shape
-            == (180 / spacing_deg, 360 / spacing_deg)
+            == ((180 / spacing_deg) * (360 / spacing_deg),)
         )
 
         # Because we set exptime to be bands of 1 on background of 0:
