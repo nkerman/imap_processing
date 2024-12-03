@@ -70,3 +70,33 @@ def test_build_az_el_grid(spacing):
     assert np.allclose(el_range, expected_el_range), (
         f"Expected elevation range: {expected_el_range}, " f"but got: {el_range}"
     )
+
+
+def test_rewrap_even_spaced_el_az_grid_1d():
+    """Test rewrap_even_spaced_el_az_grid function, without extra axis."""
+    orig_shape = (180 * 12, 360 * 12)
+    orig_grid = np.fromfunction(lambda i, j: i**2 + j, orig_shape, dtype=int)
+    raveled_values = orig_grid.ravel(order="F")
+    rewrapped_grid_infer_shape = l2_utils.rewrap_even_spaced_el_az_grid(raveled_values)
+    rewrapped_grid_known_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+        raveled_values, shape=orig_shape
+    )
+
+    assert np.array_equal(rewrapped_grid_infer_shape, orig_grid)
+    assert np.array_equal(rewrapped_grid_known_shape, orig_grid)
+
+
+def test_rewrap_even_spaced_el_az_grid_2d():
+    """Test rewrap_even_spaced_el_az_grid function, with extra axis."""
+    orig_shape = (180 * 12, 360 * 12, 5)
+    orig_grid = np.fromfunction(lambda i, j, k: i**2 + j + k, orig_shape, dtype=int)
+    raveled_values = orig_grid.reshape(-1, 5, order="F")
+    rewrapped_grid_infer_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+        raveled_values, extra_axis=True
+    )
+    rewrapped_grid_known_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+        raveled_values, shape=orig_shape, extra_axis=True
+    )
+    assert raveled_values.shape == (180 * 12 * 360 * 12, 5)
+    assert np.array_equal(rewrapped_grid_infer_shape, orig_grid)
+    assert np.array_equal(rewrapped_grid_known_shape, orig_grid)

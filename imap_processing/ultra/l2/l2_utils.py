@@ -1,5 +1,7 @@
 """Build a solid angle map for a given spacing in degrees."""
 
+import typing
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -138,3 +140,55 @@ def build_az_el_grid(
         el_grid = np.rad2deg(el_grid)
 
     return az_range, el_range, az_grid, el_grid
+
+
+@typing.no_type_check
+def rewrap_even_spaced_el_az_grid(
+    raveled_values: NDArray,
+    shape: typing.Optional[tuple[int]] = None,
+    extra_axis: bool = False,
+) -> NDArray:
+    """
+    Take an unwrapped (raveled) 1D array and reshapes it into a 2D el/az grid.
+
+    Assumes the following must be true of the original grid:
+    1. Grid was evenly spaced in angular space,
+    2. Grid had the same spacing in both azimuth and elevation.
+    3. Elevation is the 0th axis (and extends a total of 180 degrees),
+    4. Azimuth is the 1st axis (and extends a total of 360 degrees).
+    5. The grid was raveled in Fortran (F) order.
+
+    Parameters
+    ----------
+    raveled_values : NDArray
+        1D array of values to be reshaped into a 2D grid.
+    shape : tuple[int], optional
+        The shape of the original grid, if known, by default None.
+        If None, the shape will be inferred from the size of the input array.
+    extra_axis : bool, optional
+        If True, input is a 2D array with latter axis being 'extra', non-spatial axis.
+        This axis (e.g. energy bins) will be preserved in the reshaped grid.
+
+    Returns
+    -------
+    NDArray
+        The reshaped 2D grid of values.
+
+    Raises
+    ------
+    ValueError
+        If the input is not a 1D array or 2D array with an extra axis.
+    """
+    if raveled_values.ndim not in (1, 2) or (
+        raveled_values.ndim == 2 and not extra_axis
+    ):
+        raise ValueError("Input must be a 1D array or 2D array with extra axis.")
+
+    # We can infer the shape if its evenly spaced and 2D
+    if not shape:
+        spacing_deg = 1 / np.sqrt(raveled_values.shape[0] / (360 * 180))
+        shape = (int(180 // spacing_deg), int(360 // spacing_deg))
+
+    if extra_axis:
+        shape = (shape[0], shape[1], raveled_values.shape[1])
+    return raveled_values.reshape(shape, order="F")
