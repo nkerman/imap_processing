@@ -1,5 +1,7 @@
 """Calculate ULTRA Level 2 (L2) Product."""
 
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -68,7 +70,7 @@ def is_ultra45(
 @ensure_spice
 def project_inertial_frame_to_dps(
     event_time: float,
-    existing_grids: typing.Optional[tuple[NDArray, NDArray]] = None,
+    existing_grids: tuple[NDArray, NDArray] | None = None,
     # Only used if no existing grids are provided
     spacing_deg: float = DEFAULT_SPACING_DEG,
 ) -> tuple[NDArray]:
