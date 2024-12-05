@@ -326,8 +326,11 @@ def frame_transform(
         Ephemeris time(s) corresponding to position(s).
     position : np.ndarray
         <x, y, z> vector or array of vectors in reference frame `from_frame`.
-        A single position vector may be provided for multiple `et` query times
-        but only a single position vector can be provided for a single `et`.
+        There are several possible shapes for the input position and et:
+        1. A single position vector may be provided for multiple `et` query times
+        2. A single `et` may be provided for multiple position vectors,
+        3. The same number of `et` and position vectors may be provided.
+        But it is not allowed to have n position vectors and m `et`, where n != m.
     from_frame : SpiceFrame
         Reference frame of input vector(s).
     to_frame : SpiceFrame
@@ -350,11 +353,13 @@ def frame_transform(
                 f"Each input position vector must have 3 elements."
             )
         if not len(position) == np.asarray(et).size:
-            raise ValueError(
-                "Mismatch in number of position vectors and Ephemeris times provided."
-                f"Position has {len(position)} elements and et has "
-                f"{np.asarray(et).size} elements."
-            )
+            if np.asarray(et).size != 1:
+                raise ValueError(
+                    "Mismatch in number of position vectors and "
+                    "Ephemeris times provided."
+                    f"Position has {len(position)} elements and et has "
+                    f"{np.asarray(et).size} elements."
+                )
 
     # rotate will have shape = (3, 3) or (n, 3, 3)
     # position will have shape = (3,) or (n, 3)

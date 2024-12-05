@@ -129,15 +129,17 @@ def project_inertial_frame_to_dps(
     )
     flat_indices_helio = np.arange(az_grid_raveled.size)
 
-    rotation_matrix_helio_to_dps = geometry.get_rotation_matrix(
-        et=event_time,
+    # Project the grid points from the heliocentric frame to the DPS frame
+    # radii_dps are cartesian (x,y,z) radii vectors in the DPS frame corresponding to
+    # the grid points in the helio inertial frame
+    radii_dps = geometry.frame_transform(
+        et=[
+            event_time,
+        ],
+        position=radii_helio,
         from_frame=geometry.SpiceFrame.ECLIPJ2000,
         to_frame=geometry.SpiceFrame.IMAP_DPS,
     )
-
-    # cartesian (x,y,z) radii vectors in the DPS frame corresponding to
-    # the grid points in the helio inertial frame
-    radii_dps = np.dot(rotation_matrix_helio_to_dps, radii_helio.T).T
 
     # Convert the (x,y,z) vectors to spherical coordinates in the DPS frame
     # Then extract the azimuth and elevation angles in the DPS frame. Ignore radius.
