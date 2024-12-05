@@ -516,8 +516,12 @@ def cartesian_to_spherical(
         the spherical coordinates (r, azimuth, elevation):
 
         - r : Distance of the point from the origin.
-        - azimuth : angle in the xy-plane in radians [0, 2*pi].
-        - elevation : angle from the z-axis in radians [-pi/2, pi/2].
+        - azimuth : angle in the xy-plane
+          In degrees by default, if degrees parameter is True [0, 360],
+          otherwise in radians if degrees==False [0, 2*pi].
+        - elevation : angle from the z-axis
+          In degrees by default, if degrees parameter is True [0, 360],
+          otherwise in radians if degrees==False [-pi/2, pi/2].
     """
     # Magnitude of the velocity vector
     magnitude_v = np.linalg.norm(v, axis=-1, keepdims=True)
