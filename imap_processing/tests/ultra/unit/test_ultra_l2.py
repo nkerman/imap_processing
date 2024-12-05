@@ -121,7 +121,7 @@ class TestUltraL2:
                 stripe_center_lon_bin=mid_longitude,
                 num_lat_bins=int(180 / self.l1c_spatial_bin_spacing_deg),
                 num_lon_bins=int(360 / self.l1c_spatial_bin_spacing_deg),
-                timestr=f"2025-01-{i + 1:02d}T12:00:00",
+                timestr=f"2025-09-{i + 1:02d}T12:00:00",
                 head=("45" if (i % 2 == 0) else "90"),
             )
             for i, mid_longitude in enumerate(
@@ -141,7 +141,7 @@ class TestUltraL2:
             assert "Found neither 45, nor 90 in descriptor string" in caplog.text
 
     @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ultra_test_metakernel.template")
+    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
     def test_project_inertial_frame_to_dps(
         self,
     ):
@@ -185,7 +185,7 @@ class TestUltraL2:
         assert hae_el_in_dps_el.max() <= np.pi / 2
 
     @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ultra_test_metakernel.template")
+    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
     @pytest.mark.usefixtures("_setup_l1c_pset_products")
     def test_build_dps_combined_exposure_time(self):
         # TODO: Currently, the code only works w same spacing for target and source grid
