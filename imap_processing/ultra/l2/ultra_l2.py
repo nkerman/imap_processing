@@ -129,11 +129,10 @@ def project_inertial_frame_to_dps(
     )
     flat_indices_helio = np.arange(az_grid_raveled.size)
 
-    # TODO: reset the frame definition for the appropriate Pointing
-    # I'm not sure where to get the various spice kernels
-
-    rotation_matrix_helio_to_dps = spice.pxform(
-        fromstr="ECLIPJ2000", tostr="IMAP_DPS", et=event_time
+    rotation_matrix_helio_to_dps = geometry.get_rotation_matrix(
+        et=event_time,
+        from_frame=geometry.SpiceFrame.ECLIPJ2000,
+        to_frame=geometry.SpiceFrame.IMAP_DPS,
     )
 
     # cartesian (x,y,z) radii vectors in the DPS frame corresponding to
