@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 
 def build_solid_angle_map(
-    spacing: float, input_degrees: bool = False, output_degrees: bool = False
+    spacing: float, input_degrees: bool = True, output_degrees: bool = False
 ) -> NDArray:
     """
     Build a solid angle map for a given spacing in degrees.
@@ -18,7 +18,7 @@ def build_solid_angle_map(
         The bin spacing in the specified units.
     input_degrees : bool, optional
         If True, the input spacing is in degrees
-        (default is False for radians).
+        (default is True for radians).
     output_degrees : bool, optional
         If True, the output solid angle map is in square degrees
         (default is False for steradians).
@@ -26,8 +26,8 @@ def build_solid_angle_map(
     Returns
     -------
     solid_angle_grid : np.ndarray
-        The solid angle map grid in steradians or square degrees.
-        First index is latitude, second index is longitude.
+        The solid angle map grid in steradians (default) or square degrees.
+        First index is latitude/el, second index is longitude/az.
     """
     if input_degrees:
         spacing = np.deg2rad(spacing)
@@ -38,26 +38,17 @@ def build_solid_angle_map(
     if not np.isclose((np.pi / spacing) % 1, 0):
         raise ValueError("Spacing must divide evenly into pi radians.")
 
-    solid_angle_lats = np.abs(
-        spacing
-        * (
-            np.sin(
-                np.arange(
-                    start=(-np.pi / 2 + spacing),
-                    stop=(np.pi / 2 + spacing),
-                    step=spacing,
-                )
-            )
-            - np.sin(np.arange(start=(-np.pi / 2), stop=(np.pi / 2), step=spacing))
-        )
-    )
+    latitudes = np.arange(-np.pi / 2, np.pi / 2 + spacing, step=spacing)
+    sine_latitudes = np.sin(latitudes)
+    delta_sine_latitudes = np.diff(sine_latitudes)
+    solid_angle_by_latitude = np.abs(spacing * delta_sine_latitudes)
 
     solid_angle_grid = np.repeat(
-        solid_angle_lats[:, np.newaxis], (2 * np.pi) / spacing, axis=1
+        solid_angle_by_latitude[:, np.newaxis], (2 * np.pi) / spacing, axis=1
     )
 
     if output_degrees:
-        solid_angle_grid = solid_angle_grid * ((180 / np.pi) ** 2)
+        solid_angle_grid *= (180 / np.pi) ** 2
 
     return solid_angle_grid
 
