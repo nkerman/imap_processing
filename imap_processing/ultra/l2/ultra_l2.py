@@ -150,9 +150,6 @@ def project_inertial_frame_to_dps(
     hae_az_in_dps_az = hae_grid_in_dps_spherical_coord[:, 1]
     hae_el_in_dps_el = hae_grid_in_dps_spherical_coord[:, 2]
 
-    # Wrap the azimuth to the range (0, 2pi) rad = (0, 360) degrees
-    hae_az_in_dps_az = np.mod(hae_az_in_dps_az, 2 * np.pi)
-
     # Wrap the elevation to the range (-pi/2, pi/2) rad = (-90, 90) degrees
     hae_az_in_dps_az_indices = np.floor(
         (hae_az_in_dps_az / (2 * np.pi)) * (360 / spacing_deg)
