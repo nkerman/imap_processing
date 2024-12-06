@@ -6,12 +6,10 @@ import logging
 import typing
 
 import numpy as np
-import spiceypy as spice
 import xarray as xr
 from numpy.typing import NDArray
 
 from imap_processing.spice import geometry
-from imap_processing.spice.kernels import ensure_spice
 from imap_processing.ultra.l1c.ultra_l1c_pset_bins import build_energy_bins
 from imap_processing.ultra.l2 import l2_utils
 
@@ -67,7 +65,6 @@ def is_ultra45(
 
 
 @typing.no_type_check
-@ensure_spice
 def project_inertial_frame_to_dps(
     event_time: float,
     existing_grids: tuple[NDArray, NDArray] | None = None,
@@ -180,7 +177,6 @@ def project_inertial_frame_to_dps(
 
 
 @typing.no_type_check
-@ensure_spice
 def build_dps_combined_exposure_time(
     l1c_products: list[xr.Dataset],
     spacing_deg: float = DEFAULT_SPACING_DEG,
@@ -231,7 +227,7 @@ def build_dps_combined_exposure_time(
         time = float(l1c_prod.epoch.values)
         logger.info(
             f"Projecting exposure time from product at time index {prod_num} "
-            f"with epoch {time} = {spice.et2utc(time, 'ISOC', 3)}"
+            f"with epoch {time}."
         )
         # TODO: Reset the frame definition for the appropriate Pointing
 
@@ -265,7 +261,6 @@ def build_dps_combined_exposure_time(
 
 
 @typing.no_type_check
-@ensure_spice
 def build_flux_maps(
     l1c_products: list[xr.Dataset], spacing_deg: float = DEFAULT_SPACING_DEG
 ) -> tuple[NDArray]:
@@ -378,7 +373,7 @@ def build_flux_maps(
         time = float(l1c_prod.epoch.values)
         logger.info(
             f"Projecting exposure time from product at time index {prod_num} "
-            f"with epoch {time} = {spice.et2utc(time, 'ISOC', 3)}"
+            f"with epoch {time}."
         )
 
         (
