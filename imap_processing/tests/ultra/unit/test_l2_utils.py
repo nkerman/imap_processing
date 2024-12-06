@@ -1,6 +1,7 @@
 """Test creation of solid angle map."""
 
 import numpy as np
+import numpy.testing as npt
 import pytest
 
 from imap_processing.ultra.l2 import l2_utils
@@ -64,12 +65,9 @@ def test_build_az_el_grid(spacing):
     expected_el_range = np.arange(-90 + (spacing / 2), 90 + (spacing / 2), spacing)[
         ::-1
     ]  # Note el order is reversed
-    assert np.allclose(az_range, expected_az_range), (
-        f"Expected azimuth range: {expected_az_range}, " f"but got: {az_range}"
-    )
-    assert np.allclose(el_range, expected_el_range), (
-        f"Expected elevation range: {expected_el_range}, " f"but got: {el_range}"
-    )
+
+    npt.assert_allclose(az_range, expected_az_range, atol=1e-12)
+    npt.assert_allclose(el_range, expected_el_range, atol=1e-12)
 
 
 def test_rewrap_even_spaced_el_az_grid_1d():
