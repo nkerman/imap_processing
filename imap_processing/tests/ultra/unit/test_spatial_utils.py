@@ -4,7 +4,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
-from imap_processing.ultra.l2 import l2_utils
+from imap_processing.ultra.utils import spatial_utils
 
 # Parameterize with spacings (degrees here):
 valid_spacings = [0.1, 0.25, 0.5, 1, 5, 10, 20]
@@ -16,15 +16,38 @@ invalid_spacings_match_str = [
 ]
 
 
+def test_build_spatial_bins():
+    """Tests build_spatial_bins function."""
+    az_bin_edges, el_bin_edges, az_bin_midpoints, el_bin_midpoints = (
+        spatial_utils.build_spatial_bins()
+    )
+
+    assert az_bin_edges[0] == 0
+    assert az_bin_edges[-1] == 360
+    assert len(az_bin_edges) == 721
+
+    assert el_bin_edges[0] == -90
+    assert el_bin_edges[-1] == 90
+    assert len(el_bin_edges) == 361
+
+    assert len(az_bin_midpoints) == 720
+    np.testing.assert_allclose(az_bin_midpoints[0], 0.25, atol=1e-4)
+    np.testing.assert_allclose(az_bin_midpoints[-1], 359.75, atol=1e-4)
+
+    assert len(el_bin_midpoints) == 360
+    np.testing.assert_allclose(el_bin_midpoints[0], -89.75, atol=1e-4)
+    np.testing.assert_allclose(el_bin_midpoints[-1], 89.75, atol=1e-4)
+
+
 @pytest.mark.parametrize("spacing", valid_spacings)
 def test_build_solid_angle_map(spacing):
     """Test build_solid_angle_map function."""
-    solid_angle_map_steradians = l2_utils.build_solid_angle_map(
+    solid_angle_map_steradians = spatial_utils.build_solid_angle_map(
         spacing, input_degrees=True, output_degrees=False
     )
     assert np.isclose(np.sum(solid_angle_map_steradians), 4 * np.pi, atol=0, rtol=1e-9)
 
-    solid_angle_map_sqdeg = l2_utils.build_solid_angle_map(
+    solid_angle_map_sqdeg = spatial_utils.build_solid_angle_map(
         np.deg2rad(spacing), input_degrees=False, output_degrees=True
     )
     assert np.isclose(
@@ -38,7 +61,7 @@ def test_build_solid_angle_map(spacing):
 def test_build_solid_angle_map_invalid_spacing(spacing, match_str):
     """Test build_solid_angle_map function raises error for invalid spacing."""
     with pytest.raises(ValueError, match=match_str):
-        _ = l2_utils.build_solid_angle_map(
+        _ = spatial_utils.build_solid_angle_map(
             spacing, input_degrees=True, output_degrees=False
         )
 
@@ -46,7 +69,7 @@ def test_build_solid_angle_map_invalid_spacing(spacing, match_str):
 @pytest.mark.parametrize("spacing", valid_spacings)
 def test_build_az_el_grid(spacing):
     """Test build_az_el_grid function."""
-    az_range, el_range, az_grid, el_grid = l2_utils.build_az_el_grid(
+    az_range, el_range, az_grid, el_grid = spatial_utils.build_az_el_grid(
         spacing=spacing,
         input_degrees=True,
         output_degrees=True,
@@ -75,8 +98,10 @@ def test_rewrap_even_spaced_el_az_grid_1d():
     orig_shape = (180 * 12, 360 * 12)
     orig_grid = np.fromfunction(lambda i, j: i**2 + j, orig_shape, dtype=int)
     raveled_values = orig_grid.ravel(order="F")
-    rewrapped_grid_infer_shape = l2_utils.rewrap_even_spaced_el_az_grid(raveled_values)
-    rewrapped_grid_known_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+    rewrapped_grid_infer_shape = spatial_utils.rewrap_even_spaced_el_az_grid(
+        raveled_values
+    )
+    rewrapped_grid_known_shape = spatial_utils.rewrap_even_spaced_el_az_grid(
         raveled_values, shape=orig_shape
     )
 
@@ -89,10 +114,10 @@ def test_rewrap_even_spaced_el_az_grid_2d():
     orig_shape = (180 * 12, 360 * 12, 5)
     orig_grid = np.fromfunction(lambda i, j, k: i**2 + j + k, orig_shape, dtype=int)
     raveled_values = orig_grid.reshape(-1, 5, order="F")
-    rewrapped_grid_infer_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+    rewrapped_grid_infer_shape = spatial_utils.rewrap_even_spaced_el_az_grid(
         raveled_values, extra_axis=True
     )
-    rewrapped_grid_known_shape = l2_utils.rewrap_even_spaced_el_az_grid(
+    rewrapped_grid_known_shape = spatial_utils.rewrap_even_spaced_el_az_grid(
         raveled_values, shape=orig_shape, extra_axis=True
     )
     assert raveled_values.shape == (180 * 12 * 360 * 12, 5)
