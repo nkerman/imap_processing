@@ -1,4 +1,4 @@
-"""Build a solid angle map for a given spacing in degrees."""
+"""IMAP Ultra utils for spatial binning and grid creation."""
 
 import typing
 
