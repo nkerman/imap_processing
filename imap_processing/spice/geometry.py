@@ -64,8 +64,6 @@ class SpiceFrame(IntEnum):
     IMAP_GLOWS = -43750
 
 
-# TODO: Update boresight for in-situ instruments
-# TODO: Confirm ENA boresight vectors
 BORESIGHT_LOOKUP = {
     SpiceFrame.IMAP_LO: np.array([0, -1, 0]),
     SpiceFrame.IMAP_HI_45: np.array([0, 1, 0]),
@@ -73,12 +71,12 @@ BORESIGHT_LOOKUP = {
     SpiceFrame.IMAP_ULTRA_45: np.array([0, 0, 1]),
     SpiceFrame.IMAP_ULTRA_90: np.array([0, 0, 1]),
     SpiceFrame.IMAP_MAG: np.array([0, 0, 1]),
-    SpiceFrame.IMAP_SWE: np.array([0, 0, 1]),
-    SpiceFrame.IMAP_SWAPI: np.array([0, 0, 1]),
+    SpiceFrame.IMAP_SWE: np.array([-1, 0, 0]),
+    SpiceFrame.IMAP_SWAPI: np.array([0, 1, 0]),
     SpiceFrame.IMAP_CODICE: np.array([0, 0, 1]),
-    SpiceFrame.IMAP_HIT: np.array([0, 0, 1]),
-    SpiceFrame.IMAP_IDEX: np.array([0, 0, 1]),
-    SpiceFrame.IMAP_GLOWS: np.array([0, 0, 1]),
+    SpiceFrame.IMAP_HIT: np.array([0, 1, 0]),
+    SpiceFrame.IMAP_IDEX: np.array([0, 1, 0]),
+    SpiceFrame.IMAP_GLOWS: np.array([0, 0, -1]),
 }
 
 
@@ -523,14 +521,14 @@ def cartesian_to_spherical(
         - r : Distance of the point from the origin.
         - azimuth : angle in the xy-plane
           In degrees if degrees parameter is True (by default):
-            + output range=[0, 360],
+          output range=[0, 360],
           otherwise in radians if degrees parameter is False:
-            + output range=[0, 2*pi].
+          output range=[0, 2*pi].
         - elevation : angle from the z-axis
           In degrees if degrees parameter is True (by default):
-            + output range=[0, 180],
+          output range=[0, 180],
           otherwise in radians if degrees parameter is False:
-            + output range=[-pi/2, pi/2].
+          output range=[-pi/2, pi/2].
     """
     # Magnitude of the velocity vector
     magnitude_v = np.linalg.norm(v, axis=-1, keepdims=True)

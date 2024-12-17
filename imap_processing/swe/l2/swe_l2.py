@@ -22,6 +22,9 @@ GEOMETRIC_FACTORS = np.array(
 )
 ELECTRON_MASS = 9.10938356e-31  # kg
 
+# See doc string of calculate_phase_space_density() for more details.
+VELOCITY_CONVERSION_FACTOR = 1.237e31
+
 
 def get_particle_energy() -> npt.NDArray:
     """
@@ -48,7 +51,7 @@ def calculate_phase_space_density(l1b_dataset: xr.Dataset) -> npt.NDArray:
     """
     Convert counts to phase space density.
 
-    Calculate phase space density, fv, in units of s^3/cm^6
+    Calculate phase space density, fv, in units of s^3/ (cm^6 * ster).
         fv = 2 * (C/tau) / (G * v^4)
         where:
             C / tau = corrected count rate. L1B science data.
@@ -56,12 +59,26 @@ def calculate_phase_space_density(l1b_dataset: xr.Dataset) -> npt.NDArray:
             v = electron speed, computed from energy, in cm/s.
                 We need to use this formula to convert energy to speed:
                     E = 0.5 * m * v^2
-                where E is electron energy, in eV
-                (result from get_particle_energy() function),
-                m is mass of electron (9.10938356e-31 kg),
-                and v is what we want to calculate. Reorganizing above
-                formula result in v = sqrt(2 * E / m). This will be used
-                to calculate electron speed.
+                    where E is electron energy, in eV
+                    (result from get_particle_energy() function),
+                    m is mass of electron (9.10938356e-31 kg),
+                    and v is what we want to calculate. Reorganizing above
+                    formula result in v = sqrt(2 * E / m). This will be used
+                    to calculate electron speed, v.
+
+                Now to convert electron speed units to cm/s:
+                    v = sqrt(2 * E / m)
+                      = sqrt(2 * E(eV) * 1.60219e-19(J/eV) / 9.10938e-31 kg)
+                        where J = kg * m^2 / s^2.
+                      = sqrt(2 * 1.60219 * 10e−19 m^2/s^2 * E(eV) / 9.10938e-31)
+                      = sqrt(2 * 1.60219 * 10e−19 * 10e4 cm^2/s^2 * E(eV) / 9.10938e-31)
+                      = sqrt(3.20438 * 10e-15 * E(eV) / 9.10938e-31) cm/s
+                      = sqrt( (3.20438 * 10e-15 / 9.10938e-31) * E(eV) ) cm/s
+        fv = 2 * (C/tau) / (G * v^4)
+           = 2 * (C/tau) / (G * (sqrt( (3.20438 * 10e-15 / 9.10938e-31) * E(eV) ))^4)
+           = 2 * (C/tau) / (G * (sqrt(3.5176e16)^4 * E(eV)^2)
+           = 2 * (C/tau) / (G * 1.237e31 * E(eV)^2)
+        Ruth Skoug also got the same result, 1.237e31.
 
     Parameters
     ----------
@@ -87,13 +104,13 @@ def calculate_phase_space_density(l1b_dataset: xr.Dataset) -> npt.NDArray:
     )
     particle_energy_data = particle_energy_data.reshape(-1, 24, 30)
 
-    # Calculate electron speed.
-    electron_speed = np.sqrt(2 * particle_energy_data / ELECTRON_MASS)
-
-    # Calculate phase space density.
+    # Calculate phase space density using formula:
+    #   2 * (C/tau) / (G * 1.237e31 * E(eV)^2)
+    # See doc string for more details.
     density = (2 * l1b_dataset["science_data"]) / (
         GEOMETRIC_FACTORS[np.newaxis, np.newaxis, np.newaxis, :]
-        * electron_speed[:, :, :, np.newaxis] ** 4
+        * VELOCITY_CONVERSION_FACTOR
+        * particle_energy_data[:, :, :, np.newaxis] ** 2
     )
 
     return density
