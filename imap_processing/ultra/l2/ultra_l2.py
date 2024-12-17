@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 
 from imap_processing.spice import geometry
 from imap_processing.ultra.l1c.ultra_l1c_pset_bins import build_energy_bins
-from imap_processing.ultra.l2 import l2_utils
+from imap_processing.ultra.utils import spatial_utils
 
 # Set default values:
 DEFAULT_SPACING_DEG = 0.5
@@ -104,7 +104,7 @@ def project_inertial_frame_to_dps(
     """
     if not existing_grids:
         # Build the azimuth, elevation grid in the inertial frame
-        (_, __, az_grid, el_grid) = l2_utils.build_az_el_grid(
+        (_, __, az_grid, el_grid) = spatial_utils.build_az_el_grid(
             spacing=spacing_deg,
             input_degrees=True,
             output_degrees=False,
@@ -215,7 +215,7 @@ def build_dps_combined_exposure_time(
 
     # Create ecliptic inertial grid onto which we will project the individual DPS frames
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
-    (az_range, el_range, az_grid, el_grid) = l2_utils.build_az_el_grid(
+    (az_range, el_range, az_grid, el_grid) = spatial_utils.build_az_el_grid(
         spacing=spacing_deg,
         input_degrees=True,
         output_degrees=False,
@@ -321,7 +321,7 @@ def build_flux_maps(
     combined_counts = np.zeros((num_el * num_az, num_energy))
 
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
-    (az_range, el_range, az_grid, el_grid) = l2_utils.build_az_el_grid(
+    (az_range, el_range, az_grid, el_grid) = spatial_utils.build_az_el_grid(
         spacing=spacing_deg,
         input_degrees=True,
         output_degrees=False,
@@ -336,7 +336,7 @@ def build_flux_maps(
     # Unravel to [n, 3] shape
     radii_helio = radii_helio.reshape(-1, 3, order="C")
 
-    solid_angle_grid = l2_utils.build_solid_angle_map(
+    solid_angle_grid = spatial_utils.build_solid_angle_map(
         spacing=spacing_deg, input_degrees=True, output_degrees=False
     )
 
@@ -460,10 +460,10 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
     ) = build_flux_maps(l1c_products, spacing_deg=DEFAULT_SPACING_DEG)
 
     # Rewrap the vars into grids:
-    combined_counts = l2_utils.rewrap_even_spaced_el_az_grid(
+    combined_counts = spatial_utils.rewrap_even_spaced_el_az_grid(
         combined_counts, extra_axis=True
     )
-    combined_exptime_total = l2_utils.rewrap_even_spaced_el_az_grid(
+    combined_exptime_total = spatial_utils.rewrap_even_spaced_el_az_grid(
         combined_exptime_total, extra_axis=False
     )
 
