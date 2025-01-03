@@ -263,24 +263,3 @@ class TestUltraL2:
 
         # There should be 2*2 instances of each projection index
         assert np.all(np.bincount(flat_indices_proj) == 1 / (input_spacing_deg**2))
-
-
-# (
-#         flat_indices_in,
-#         flat_indices_proj,
-#         az_grid_input_raveled,
-#         el_grid_input_raveled,
-#         input_az_in_proj_az,
-#         input_el_in_proj_el,
-#         input_az_in_proj_az_indices,
-#         input_el_in_proj_el_indices,
-# ) = ultra_l2.map_indices_frame_to_frame(
-#     input_frame=geometry.SpiceFrame.ECLIPJ2000,
-#     projection_frame=geometry.SpiceFrame.ECLIPJ2000,
-#     event_time=0,
-#     input_frame_spacing_deg=1,
-#     projection_frame_spacing_deg=1
-# )
-# assert np.array_equal(flat_indices_proj, flat_indices_in)
-
-# def test_
