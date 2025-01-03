@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import typing
+from functools import lru_cache
 
 import numpy as np
 import xarray as xr
@@ -18,6 +19,10 @@ DEFAULT_SPACING_DEG = 0.5
 
 logger = logging.getLogger(__name__)
 logger.info("Importing ultra_l2 module")
+
+# Use lru_cache to wrap build_az_el_grid, allowing for efficient reuse of the same
+# az/el grid without passing through all functions
+build_az_el_grid_cached = lru_cache(maxsize=10)(spatial_utils.build_az_el_grid)
 
 
 def is_ultra45(
@@ -64,11 +69,136 @@ def is_ultra45(
     return False
 
 
+def map_indices_frame_to_frame(
+    input_frame: geometry.SpiceFrame,
+    projection_frame: geometry.SpiceFrame,
+    event_time: float,
+    input_frame_spacing_deg: float = DEFAULT_SPACING_DEG,
+    projection_frame_spacing_deg: float = DEFAULT_SPACING_DEG,
+) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
+    """
+    Match flattened rectangular grid indices between two frames.
+
+    Parameters
+    ----------
+    input_frame : geometry.SpiceFrame
+        The frame in which the input grid is defined.
+    projection_frame : geometry.SpiceFrame
+        The frame to which the input grid will be projected.
+    event_time : float
+        The time at which to project the grid.
+    input_frame_spacing_deg : float, optional
+        The spacing of the input frame grid in degrees,
+        by default DEFAULT_SPACING_DEG.
+    projection_frame_spacing_deg : float, optional
+        The spacing of the projection frame grid in degrees,
+        by default DEFAULT_SPACING_DEG.
+
+    Returns
+    -------
+    tuple[NDArray]
+        Tuple of the following arrays:
+        - Flat indices of the grid points in the input frame.
+        - Flat indices of the grid points in the projection frame.
+        - Azimuth values of the input grid points in the input frame, raveled.
+        - Elevation values of the input grid points in the input frame, raveled.
+        - Azimuth values of the input grid points in the projection frame, raveled.
+        - Elevation values of the input grid points in the projection frame, raveled.
+        - Azimuth indices of the input grid points in the projection frame az grid.
+        - Elevation indices of the input grid points in the projection frame el grid.
+    """
+    if input_frame_spacing_deg > projection_frame_spacing_deg:
+        logger.warning(
+            "Input frame has a larger spacing than the projection frame."
+            f"\nReceived: input = {input_frame_spacing_deg} degrees "
+            f"and {projection_frame_spacing_deg} degrees."
+        )
+    # Build the azimuth, elevation grid in the inertial frame
+    (_, __, az_grid_in, el_grid_in) = build_az_el_grid_cached(
+        spacing=input_frame_spacing_deg,
+        input_degrees=True,
+        output_degrees=False,
+        centered_azimuth=False,  # (0, 2pi rad = 0, 360 deg)
+        centered_elevation=True,  # (-pi/2, pi/2 rad = -90, 90 deg)
+    )
+
+    # Unwrap the grid to a 1D array for same interface as tessellation
+    az_grid_input_raveled = az_grid_in.ravel(order="F")
+    el_grid_input_raveled = el_grid_in.ravel(order="F")
+
+    # Get the flattened indices of the grid points in the input frame (Fortran order)
+    # TODO: Discuss with Nick/Tim/Laura: Should this just be an arange?
+    flat_indices_in = np.ravel(
+        np.arange(az_grid_input_raveled.size).reshape(az_grid_in.shape), order="F"
+    )
+
+    radii_in = geometry.spherical_to_cartesian(
+        np.stack(
+            (
+                np.ones_like(az_grid_input_raveled),
+                az_grid_input_raveled,
+                el_grid_input_raveled,
+            ),
+            axis=-1,
+        )
+    )
+
+    # Project the grid points from the input frame to the projection frame
+    # radii_proj are cartesian (x,y,z) radii vectors in the projection frame
+    # corresponding to the grid points in the input frame
+    radii_proj = geometry.frame_transform(
+        et=[
+            event_time,
+        ],
+        position=radii_in,
+        from_frame=input_frame,
+        to_frame=projection_frame,
+    )
+
+    # Convert the (x,y,z) vectors to spherical coordinates in the projection frame
+    # Then extract the azimuth, elevation angles in the projection frame. Ignore radius.
+    input_grid_in_proj_spherical_coord = geometry.cartesian_to_spherical(
+        radii_proj, degrees=False
+    )
+
+    input_az_in_proj_az = input_grid_in_proj_spherical_coord[:, 1]
+    input_el_in_proj_el = input_grid_in_proj_spherical_coord[:, 2]
+
+    # Create bin edges for azimuth (0 to 2pi) and elevation (-pi/2 to pi/2)
+    az_bins = np.linspace(0, 2 * np.pi, int(360 / projection_frame_spacing_deg) + 1)
+    el_bins = np.linspace(
+        -np.pi / 2, np.pi / 2, int(180 / projection_frame_spacing_deg) + 1
+    )
+
+    # Use digitize to find indices (-1 since digitize returns 1-based indices)
+    input_az_in_proj_az_indices = np.digitize(input_az_in_proj_az, az_bins) - 1
+    input_el_in_proj_el_indices = np.digitize(input_el_in_proj_el, el_bins[::-1]) - 1
+
+    # NOTE: This method of matching indices 1:1 is rectangular grid-focused
+    # It will not necessarily work with a tessellation (e.g. Healpix)
+    flat_indices_proj = np.ravel_multi_index(
+        multi_index=(input_az_in_proj_az_indices, input_el_in_proj_el_indices),
+        dims=(
+            int(360 // projection_frame_spacing_deg),
+            int(180 // projection_frame_spacing_deg),
+        ),
+        order="F",  # MATLAB uses Fortran order, which we replicate here
+    )
+    return (
+        flat_indices_in,
+        flat_indices_proj,
+        az_grid_input_raveled,
+        el_grid_input_raveled,
+        input_az_in_proj_az,
+        input_el_in_proj_el,
+        input_az_in_proj_az_indices,
+        input_el_in_proj_el_indices,
+    )
+
+
 @typing.no_type_check
 def project_inertial_frame_to_dps(
     event_time: float,
-    existing_grids: tuple[NDArray, NDArray] | None = None,
-    # Only used if no existing grids are provided
     spacing_deg: float = DEFAULT_SPACING_DEG,
 ) -> tuple[NDArray]:
     """
@@ -80,10 +210,6 @@ def project_inertial_frame_to_dps(
     ----------
     event_time : float
         Time at which to project the grid.
-    existing_grids : tuple[NDArray, NDArray], optional
-        Existing azimuth_array, elevation_array grids to use, by default None
-        in which case the grids will be built from scratch.
-        Each of these grids should be 2D arrays of either azimuth or elevation values.
     spacing_deg : float, optional
         Spacing of the grid in degrees, by default DEFAULT_SPACING_DEG.
 
@@ -102,17 +228,14 @@ def project_inertial_frame_to_dps(
         - Azimuth indices of original points in the DPS azimuth grid (1D)
         - Elevation indices of original points in the DPS elevation grid (1D)
     """
-    if not existing_grids:
-        # Build the azimuth, elevation grid in the inertial frame
-        (_, __, az_grid, el_grid) = spatial_utils.build_az_el_grid(
-            spacing=spacing_deg,
-            input_degrees=True,
-            output_degrees=False,
-            centered_azimuth=False,  # (0, 2pi rad = 0, 360 deg)
-            centered_elevation=True,  # (-pi/2, pi/2 rad = -90, 90 deg)
-        )
-    else:
-        az_grid, el_grid = existing_grids
+    # Build the azimuth, elevation grid in the inertial frame
+    (_, __, az_grid, el_grid) = build_az_el_grid_cached(
+        spacing=spacing_deg,
+        input_degrees=True,
+        output_degrees=False,
+        centered_azimuth=False,  # (0, 2pi rad = 0, 360 deg)
+        centered_elevation=True,  # (-pi/2, pi/2 rad = -90, 90 deg)
+    )
 
     # Unwrap the grid to a 1D array for same interface as tessellation
     az_grid_raveled = az_grid.ravel(order="F")
@@ -215,7 +338,7 @@ def build_dps_combined_exposure_time(
 
     # Create ecliptic inertial grid onto which we will project the individual DPS frames
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
-    (az_range, el_range, az_grid, el_grid) = spatial_utils.build_az_el_grid(
+    (az_range, el_range, az_grid, el_grid) = build_az_el_grid_cached(
         spacing=spacing_deg,
         input_degrees=True,
         output_degrees=False,
@@ -229,26 +352,27 @@ def build_dps_combined_exposure_time(
             f"Projecting exposure time from product at time index {prod_num} "
             f"with epoch {time}."
         )
-        # TODO: Reset the frame definition for the appropriate Pointing
 
         (
-            az_grid_raveled,
-            el_grid_raveled,
-            flat_indices_helio,
-            flat_indices_dps,
-            hae_az_in_dps_az,
-            hae_el_in_dps_el,
-            hae_az_in_dps_az_indices,
-            hae_el_in_dps_el_indices,
-        ) = project_inertial_frame_to_dps(
+            flat_indices_in,
+            flat_indices_proj,
+            az_grid_input_raveled,
+            el_grid_input_raveled,
+            input_az_in_proj_az,
+            input_el_in_proj_el,
+            input_az_in_proj_az_indices,
+            input_el_in_proj_el_indices,
+        ) = map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.ECLIPJ2000,
+            projection_frame=geometry.SpiceFrame.IMAP_DPS,
             event_time=time,
-            existing_grids=(az_grid, el_grid),
-            spacing_deg=spacing_deg,
+            input_frame_spacing_deg=spacing_deg,
+            projection_frame_spacing_deg=spacing_deg,
         )
 
         # Add to the combined exposure time arrays
         pointing_projected_exptime = l1c_prod.exposure_time.values.ravel(order="F")[
-            flat_indices_dps
+            flat_indices_proj
         ]
         if is_ultra45(l1c_prod):
             combined_exptime_45 += pointing_projected_exptime
@@ -321,7 +445,7 @@ def build_flux_maps(
     combined_counts = np.zeros((num_el * num_az, num_energy))
 
     # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
-    (az_range, el_range, az_grid, el_grid) = spatial_utils.build_az_el_grid(
+    (az_range, el_range, az_grid, el_grid) = build_az_el_grid_cached(
         spacing=spacing_deg,
         input_degrees=True,
         output_degrees=False,
@@ -376,19 +500,11 @@ def build_flux_maps(
             f"with epoch {time}."
         )
 
-        (
-            az_grid_raveled,
-            el_grid_raveled,
-            flat_indices_helio,
-            flat_indices_dps,
-            hae_az_in_dps_az,
-            hae_el_in_dps_el,
-            hae_az_in_dps_az_indices,
-            hae_el_in_dps_el_indices,
-        ) = project_inertial_frame_to_dps(
+        (flat_indices_hae, flat_indices_dps) = map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.ECLIPJ2000,
+            projection_frame=geometry.SpiceFrame.IMAP_DPS,
             event_time=time,
-            existing_grids=(az_grid, el_grid),
-        )
+        )[:2]
 
         # TODO: Replace with sum of counts across all l1c products on an inertial grid
         pointing_projected_counts = l1c_prod.counts.values.reshape(
@@ -400,15 +516,16 @@ def build_flux_maps(
     # TODO: this will be removed in the final version
     # Output the last pointing's data for use in development and testing
     developer_dict = {
-        "az_grid": az_grid,
-        "el_grid": el_grid,
-        "az_grid_raveled": az_grid_raveled,
-        "el_grid_raveled": el_grid_raveled,
-        "hae_az_in_dps_az": hae_az_in_dps_az,
-        "hae_el_in_dps_el": hae_el_in_dps_el,
-        "hae_az_in_dps_az_indices": hae_az_in_dps_az_indices,
-        "hae_el_in_dps_el_indices": hae_el_in_dps_el_indices,
-        "radii_helio": radii_helio,
+        # "az_grid": az_grid,
+        # "el_grid": el_grid,
+        # "az_grid_raveled": az_grid_raveled,
+        # "el_grid_raveled": el_grid_raveled,
+        # "hae_az_in_dps_az": hae_az_in_dps_az,
+        # "hae_el_in_dps_el": hae_el_in_dps_el,
+        # "hae_az_in_dps_az_indices": hae_az_in_dps_az_indices,
+        # "hae_el_in_dps_el_indices": hae_el_in_dps_el_indices,
+        # "radii_helio": radii_helio,
+        # "all_dps_index_map_dict": all_dps_index_map_dict,
     }
 
     return (
@@ -441,6 +558,42 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
     xr.Dataset
         L2 output dataset.
     """
+    # TODO: come back to this! its just a sketch so far, and in wrong place
+    # Map indices across all l1c products,
+    all_dps_index_map_dict = {}
+    for prod_num, l1c_prod in enumerate(l1c_products):
+        time = float(l1c_prod.epoch.values)
+        logger.info(
+            f"Generating index maps for product at time index {prod_num} "
+            f"with epoch {time}."
+        )
+        product_index_map_dict = {}
+
+        # First 'pull' from DPS frame to HAE
+        (
+            indices_hae_input,
+            indices_dps_proj,
+        ) = map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.ECLIPJ2000,
+            projection_frame=geometry.SpiceFrame.IMAP_DPS,
+            event_time=time,
+        )[:2]
+        product_index_map_dict["indices_hae_input"] = indices_hae_input
+        product_index_map_dict["indices_dps_proj"] = indices_dps_proj
+
+        # Then 'push' from DPS frame to HAE
+        (
+            indices_dps_input,
+            indices_hae_proj,
+        ) = map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.IMAP_DPS,
+            projection_frame=geometry.SpiceFrame.ECLIPJ2000,
+            event_time=time,
+        )[:2]
+        product_index_map_dict["indices_hae_proj"] = indices_hae_proj
+        product_index_map_dict["indices_dps_input"] = indices_dps_input
+        all_dps_index_map_dict[time] = product_index_map_dict
+
     logger.info("Running ultra_l2 function")
     num_dps_pointings = len(l1c_products)
     logger.info(f"Number of DPS Pointings: {num_dps_pointings}")

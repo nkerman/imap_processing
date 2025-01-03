@@ -8,6 +8,7 @@ import pytest
 import spiceypy as spice
 import xarray as xr
 
+from imap_processing.spice import geometry
 from imap_processing.spice.kernels import ensure_spice
 from imap_processing.ultra.l1c.ultra_l1c_pset_bins import build_energy_bins
 from imap_processing.ultra.l2 import ultra_l2
@@ -142,50 +143,6 @@ class TestUltraL2:
 
     @pytest.mark.external_kernel()
     @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
-    def test_project_inertial_frame_to_dps(
-        self,
-    ):
-        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
-        spacing_deg = 1
-        (
-            az_grid_raveled,
-            el_grid_raveled,
-            flat_indices_helio,
-            flat_indices_dps,
-            hae_az_in_dps_az,
-            hae_el_in_dps_el,
-            hae_az_in_dps_az_indices,
-            hae_el_in_dps_el_indices,
-        ) = ultra_l2.project_inertial_frame_to_dps(
-            event_time=et,
-            spacing_deg=spacing_deg,
-        )
-
-        # Shape checks
-        assert az_grid_raveled.shape == el_grid_raveled.shape == (180 * 360,)
-        assert flat_indices_helio.shape == flat_indices_dps.shape == (180 * 360,)
-        assert hae_az_in_dps_az.shape == hae_el_in_dps_el.shape == (180 * 360,)
-        assert (
-            hae_az_in_dps_az_indices.shape
-            == hae_el_in_dps_el_indices.shape
-            == (180 * 360,)
-        )
-
-        # Value range checks
-        # flat indices helio should be the range from 0 to 180*360
-        # Those flat indices projected into the dps frame should be within that range
-        assert np.array_equal(flat_indices_helio, np.arange(180 * 360))
-        assert flat_indices_dps.min() >= 0
-        assert flat_indices_dps.max() <= 360 * 180
-
-        # Az and el should be within the expected ranges once projected to DPS
-        assert hae_az_in_dps_az.min() >= 0
-        assert hae_az_in_dps_az.max() <= np.pi * 2
-        assert hae_el_in_dps_el.min() >= -np.pi / 2
-        assert hae_el_in_dps_el.max() <= np.pi / 2
-
-    @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
     @pytest.mark.usefixtures("_setup_l1c_pset_products")
     def test_build_dps_combined_exposure_time(self):
         # TODO: Currently, the code only works w same spacing for target and source grid
@@ -225,3 +182,105 @@ class TestUltraL2:
             combined_exptime_total,
             combined_exptime_45 + combined_exptime_90,
         )
+
+    @pytest.mark.external_kernel()
+    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
+    def test_map_indices_frame_to_frame_same_frame(self):
+        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
+        spacing_deg = 1
+        (
+            flat_indices_in,
+            flat_indices_proj,
+            az_grid_input_raveled,
+            el_grid_input_raveled,
+            input_az_in_proj_az,
+            input_el_in_proj_el,
+        ) = ultra_l2.map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.IMAP_DPS,
+            projection_frame=geometry.SpiceFrame.IMAP_DPS,
+            event_time=et,
+            input_frame_spacing_deg=spacing_deg,
+            projection_frame_spacing_deg=spacing_deg,
+        )[:6]
+
+        # The two arrays should be the same if the input and projection
+        # frames are the same and the spacing is the same.
+        np.testing.assert_array_equal(flat_indices_in, flat_indices_proj)
+
+        # The input and projection azimuth and elevation grids should be the same
+        np.testing.assert_allclose(az_grid_input_raveled, input_az_in_proj_az)
+        np.testing.assert_allclose(el_grid_input_raveled, input_el_in_proj_el)
+
+        # The projection azimuth and elevation, when reshaped to a 2D grid,
+        # should be the same as the input grid created with build_az_el_grid.
+        np.testing.assert_allclose(
+            input_az_in_proj_az.reshape(
+                (180 // spacing_deg, 360 // spacing_deg), order="F"
+            ),
+            ultra_l2.build_az_el_grid_cached(spacing=np.deg2rad(spacing_deg))[2],
+        )
+        np.testing.assert_allclose(
+            input_el_in_proj_el.reshape(
+                (180 // spacing_deg, 360 // spacing_deg), order="F"
+            ),
+            ultra_l2.build_az_el_grid_cached(spacing=np.deg2rad(spacing_deg))[3],
+        )
+
+    @pytest.mark.external_kernel()
+    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
+    @pytest.mark.parametrize("input_spacing_deg", [1 / 4, 1 / 3, 1 / 2, 1])
+    def test_map_indices_frame_to_frame_different_spacings(self, input_spacing_deg):
+        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
+        proj_spacing_deg = 1
+
+        (
+            flat_indices_in,
+            flat_indices_proj,
+        ) = ultra_l2.map_indices_frame_to_frame(
+            input_frame=geometry.SpiceFrame.IMAP_DPS,
+            projection_frame=geometry.SpiceFrame.IMAP_DPS,
+            event_time=et,
+            input_frame_spacing_deg=input_spacing_deg,
+            projection_frame_spacing_deg=proj_spacing_deg,
+        )[:2]
+
+        # The input indices should still be the same length as the projection indices
+        assert len(flat_indices_in) == len(flat_indices_proj)
+
+        # However, the min and max of the input indices should go from:
+        # 0 to (180/spacing_deg of the input)*(360/spacing_deg of the input)
+        # and the min and max of the projection indices should go from:
+        # 0 to (180/spacing_deg of the projection)*(360/spacing_deg of the projection)
+        assert flat_indices_in.min() == 0
+        assert flat_indices_in.max() == (
+            (180 / (input_spacing_deg)) * (360 / (input_spacing_deg)) - 1
+        )
+        assert flat_indices_proj.min() == 0
+        assert (
+            flat_indices_proj.max()
+            == ((180 / proj_spacing_deg) * (360 / proj_spacing_deg)) - 1
+        )
+
+        # There should be 2*2 instances of each projection index
+        assert np.all(np.bincount(flat_indices_proj) == 1 / (input_spacing_deg**2))
+
+
+# (
+#         flat_indices_in,
+#         flat_indices_proj,
+#         az_grid_input_raveled,
+#         el_grid_input_raveled,
+#         input_az_in_proj_az,
+#         input_el_in_proj_el,
+#         input_az_in_proj_az_indices,
+#         input_el_in_proj_el_indices,
+# ) = ultra_l2.map_indices_frame_to_frame(
+#     input_frame=geometry.SpiceFrame.ECLIPJ2000,
+#     projection_frame=geometry.SpiceFrame.ECLIPJ2000,
+#     event_time=0,
+#     input_frame_spacing_deg=1,
+#     projection_frame_spacing_deg=1
+# )
+# assert np.array_equal(flat_indices_proj, flat_indices_in)
+
+# def test_
