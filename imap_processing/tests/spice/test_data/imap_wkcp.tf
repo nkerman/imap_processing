@@ -86,9 +86,6 @@ References
    10. Responses from IMAP instrument teams on their base frame axis
        definitions, received in email.
 
-   11. "Euler angles", Wikimedia Foundation, 2024-04-22,
-       https://en.wikipedia.org/wiki/Euler_angles
-
 
 Contact Information
 ========================================================================
@@ -184,229 +181,226 @@ IMAP NAIF ID Codes -- Definitions
       NAIF_BODY_CODE   += ( -43027             )
 
       NAIF_BODY_NAME   += ( 'IMAP_SUN_SENSOR_PZ' )
-      NAIF_BODY_CODE   += ( -43030               )
+      NAIF_BODY_CODE   += ( -42030               )
 
       NAIF_BODY_NAME   += ( 'IMAP_SUN_SENSOR_MZ' )
-      NAIF_BODY_CODE   += ( -43031               )
+      NAIF_BODY_CODE   += ( -42031               )
 
       NAIF_BODY_NAME   += ( 'IMAP_STAR_TRACKER_PX' )
-      NAIF_BODY_CODE   += ( -43040                 )
+      NAIF_BODY_CODE   += ( -42040                 )
 
       NAIF_BODY_NAME   += ( 'IMAP_STAR_TRACKER_MX' )
-      NAIF_BODY_CODE   += ( -43041                 )
+      NAIF_BODY_CODE   += ( -42041                 )
 
       NAIF_BODY_NAME   += ( 'IMAP_LOW_GAIN_ANTENNA' )
-      NAIF_BODY_CODE   += ( -43050                  )
+      NAIF_BODY_CODE   += ( -42050                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_MED_GAIN_ANTENNA' )
-      NAIF_BODY_CODE   += ( -43051                  )
+      NAIF_BODY_CODE   += ( -42051                  )
 
-      NAIF_BODY_NAME   += ( 'IMAP_LO_BASE'       )
-      NAIF_BODY_CODE   += ( -43100               )
+      NAIF_BODY_NAME   += ( 'IMAP_NUTATION_DAMPER_01' )
+      NAIF_BODY_CODE   += ( -42060                    )
 
-      NAIF_BODY_NAME   += ( 'IMAP_LO_PIVOT'      )
-      NAIF_BODY_CODE   += ( -43101               )
+      NAIF_BODY_NAME   += ( 'IMAP_NUTATION_DAMPER_02' )
+      NAIF_BODY_CODE   += ( -42061                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_LO_ENA_SENSOR' )
-      NAIF_BODY_CODE   += ( -43102               )
+      NAIF_BODY_CODE   += ( -42102               )
 
       NAIF_BODY_NAME   += ( 'IMAP_LO_STAR_SENSOR' )
-      NAIF_BODY_CODE   += ( -43103                )
-
-      NAIF_BODY_NAME   += ( 'IMAP_LO')
-      NAIF_BODY_CODE   += ( -43105)
+      NAIF_BODY_CODE   += ( -42103                )
 
       NAIF_BODY_NAME   += ( 'IMAP_HI_45' )
-      NAIF_BODY_CODE   += ( -43150       )
+      NAIF_BODY_CODE   += ( -42150       )
 
       NAIF_BODY_NAME   += ( 'IMAP_HI_90' )
-      NAIF_BODY_CODE   += ( -43175       )
+      NAIF_BODY_CODE   += ( -42175       )
 
       NAIF_BODY_NAME   += ( 'IMAP_ULTRA_45' )
-      NAIF_BODY_CODE   += ( -43200          )
+      NAIF_BODY_CODE   += ( -42200          )
 
       NAIF_BODY_NAME   += ( 'IMAP_ULTRA_90' )
-      NAIF_BODY_CODE   += ( -43225          )
+      NAIF_BODY_CODE   += ( -42225          )
 
       NAIF_BODY_NAME   += ( 'IMAP_MAG' )
-      NAIF_BODY_CODE   += ( -43250     )
+      NAIF_BODY_CODE   += ( -42250     )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_P63' )
-      NAIF_BODY_CODE   += ( -43301                  )
+      NAIF_BODY_CODE   += ( -42301                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_P42' )
-      NAIF_BODY_CODE   += ( -43302                  )
+      NAIF_BODY_CODE   += ( -42302                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_P21' )
-      NAIF_BODY_CODE   += ( -43303                  )
+      NAIF_BODY_CODE   += ( -42303                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_000' )
-      NAIF_BODY_CODE   += ( -43304                  )
+      NAIF_BODY_CODE   += ( -42304                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_M21' )
-      NAIF_BODY_CODE   += ( -43305                  )
+      NAIF_BODY_CODE   += ( -42305                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_M42' )
-      NAIF_BODY_CODE   += ( -43306                  )
+      NAIF_BODY_CODE   += ( -42306                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWE_DETECTOR_M63' )
-      NAIF_BODY_CODE   += ( -43307                  )
+      NAIF_BODY_CODE   += ( -42307                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWAPI_APERTURE_L' )
-      NAIF_BODY_CODE   += ( -43351                  )
+      NAIF_BODY_CODE   += ( -42351                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWAPI_APERTURE_R' )
-      NAIF_BODY_CODE   += ( -43352                  )
+      NAIF_BODY_CODE   += ( -42352                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_SWAPI_SUNGLASSES' )
-      NAIF_BODY_CODE   += ( -43353                  )
+      NAIF_BODY_CODE   += ( -42353                  )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_01' )
-      NAIF_BODY_CODE   += ( -43401                       )
+      NAIF_BODY_CODE   += ( -42401                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_02' )
-      NAIF_BODY_CODE   += ( -43402                       )
+      NAIF_BODY_CODE   += ( -42402                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_03' )
-      NAIF_BODY_CODE   += ( -43403                       )
+      NAIF_BODY_CODE   += ( -42403                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_04' )
-      NAIF_BODY_CODE   += ( -43404                       )
+      NAIF_BODY_CODE   += ( -42404                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_05' )
-      NAIF_BODY_CODE   += ( -43405                       )
+      NAIF_BODY_CODE   += ( -42405                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_06' )
-      NAIF_BODY_CODE   += ( -43406                       )
+      NAIF_BODY_CODE   += ( -42406                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_07' )
-      NAIF_BODY_CODE   += ( -43407                       )
+      NAIF_BODY_CODE   += ( -42407                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_08' )
-      NAIF_BODY_CODE   += ( -43408                       )
+      NAIF_BODY_CODE   += ( -42408                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_09' )
-      NAIF_BODY_CODE   += ( -43409                       )
+      NAIF_BODY_CODE   += ( -42409                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_10' )
-      NAIF_BODY_CODE   += ( -43410                       )
+      NAIF_BODY_CODE   += ( -42410                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_11' )
-      NAIF_BODY_CODE   += ( -43411                       )
+      NAIF_BODY_CODE   += ( -42411                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_12' )
-      NAIF_BODY_CODE   += ( -43412                       )
+      NAIF_BODY_CODE   += ( -42412                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_13' )
-      NAIF_BODY_CODE   += ( -43413                       )
+      NAIF_BODY_CODE   += ( -42413                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_14' )
-      NAIF_BODY_CODE   += ( -43414                       )
+      NAIF_BODY_CODE   += ( -42414                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_15' )
-      NAIF_BODY_CODE   += ( -43415                       )
+      NAIF_BODY_CODE   += ( -42415                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_16' )
-      NAIF_BODY_CODE   += ( -43416                       )
+      NAIF_BODY_CODE   += ( -42416                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_17' )
-      NAIF_BODY_CODE   += ( -43417                       )
+      NAIF_BODY_CODE   += ( -42417                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_18' )
-      NAIF_BODY_CODE   += ( -43418                       )
+      NAIF_BODY_CODE   += ( -42418                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_19' )
-      NAIF_BODY_CODE   += ( -43419                       )
+      NAIF_BODY_CODE   += ( -42419                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_20' )
-      NAIF_BODY_CODE   += ( -43420                       )
+      NAIF_BODY_CODE   += ( -42420                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_21' )
-      NAIF_BODY_CODE   += ( -43421                       )
+      NAIF_BODY_CODE   += ( -42421                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_22' )
-      NAIF_BODY_CODE   += ( -43422                       )
+      NAIF_BODY_CODE   += ( -42422                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_23' )
-      NAIF_BODY_CODE   += ( -43423                       )
+      NAIF_BODY_CODE   += ( -42423                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_LO_APERTURE_24' )
-      NAIF_BODY_CODE   += ( -43424                       )
+      NAIF_BODY_CODE   += ( -42424                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_01' )
-      NAIF_BODY_CODE   += ( -43425                       )
+      NAIF_BODY_CODE   += ( -42425                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_02' )
-      NAIF_BODY_CODE   += ( -43426                       )
+      NAIF_BODY_CODE   += ( -42426                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_03' )
-      NAIF_BODY_CODE   += ( -43427                       )
+      NAIF_BODY_CODE   += ( -42427                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_04' )
-      NAIF_BODY_CODE   += ( -43428                       )
+      NAIF_BODY_CODE   += ( -42428                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_05' )
-      NAIF_BODY_CODE   += ( -43429                       )
+      NAIF_BODY_CODE   += ( -42429                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_06' )
-      NAIF_BODY_CODE   += ( -43430                       )
+      NAIF_BODY_CODE   += ( -42430                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_07' )
-      NAIF_BODY_CODE   += ( -43431                       )
+      NAIF_BODY_CODE   += ( -42431                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_08' )
-      NAIF_BODY_CODE   += ( -43432                       )
+      NAIF_BODY_CODE   += ( -42432                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_09' )
-      NAIF_BODY_CODE   += ( -43433                       )
+      NAIF_BODY_CODE   += ( -42433                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_10' )
-      NAIF_BODY_CODE   += ( -43434                       )
+      NAIF_BODY_CODE   += ( -42434                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_11' )
-      NAIF_BODY_CODE   += ( -43435                       )
+      NAIF_BODY_CODE   += ( -42435                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_CODICE_HI_APERTURE_12' )
-      NAIF_BODY_CODE   += ( -43436                       )
+      NAIF_BODY_CODE   += ( -42436                       )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_01' )
-      NAIF_BODY_CODE   += ( -43501                    )
+      NAIF_BODY_CODE   += ( -42501                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_02' )
-      NAIF_BODY_CODE   += ( -43502                    )
+      NAIF_BODY_CODE   += ( -42502                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_03' )
-      NAIF_BODY_CODE   += ( -43503                    )
+      NAIF_BODY_CODE   += ( -42503                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_04' )
-      NAIF_BODY_CODE   += ( -43504                    )
+      NAIF_BODY_CODE   += ( -42504                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_05' )
-      NAIF_BODY_CODE   += ( -43505                    )
+      NAIF_BODY_CODE   += ( -42505                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_06' )
-      NAIF_BODY_CODE   += ( -43506                    )
+      NAIF_BODY_CODE   += ( -42506                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_07' )
-      NAIF_BODY_CODE   += ( -43507                    )
+      NAIF_BODY_CODE   += ( -42507                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_08' )
-      NAIF_BODY_CODE   += ( -43508                    )
+      NAIF_BODY_CODE   += ( -42508                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_09' )
-      NAIF_BODY_CODE   += ( -43509                    )
+      NAIF_BODY_CODE   += ( -42509                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_HIT_L1_APERTURE_10' )
-      NAIF_BODY_CODE   += ( -43510                    )
+      NAIF_BODY_CODE   += ( -42510                    )
 
       NAIF_BODY_NAME   += ( 'IMAP_IDEX_DETECTOR' )
-      NAIF_BODY_CODE   += ( -43701               )
+      NAIF_BODY_CODE   += ( -42701               )
 
       NAIF_BODY_NAME   += ( 'IMAP_IDEX_FULL_SCIENCE' )
-      NAIF_BODY_CODE   += ( -43702                   )
+      NAIF_BODY_CODE   += ( -42702                   )
 
       NAIF_BODY_NAME   += ( 'IMAP_GLOWS' )
-      NAIF_BODY_CODE   += ( -43750       )
+      NAIF_BODY_CODE   += ( -42750       )
 
    \begintext
 
@@ -437,116 +431,117 @@ IMAP NAIF ID Codes -- Definitions
       IMAP_THRUSTER_R6              IMAP_SPACECRAFT    FIXED     -43025
       IMAP_THRUSTER_R7              IMAP_SPACECRAFT    FIXED     -43026
       IMAP_THRUSTER_R8              IMAP_SPACECRAFT    FIXED     -43027
-      IMAP_SUN_SENSOR_PZ            IMAP_SPACECRAFT    FIXED     -43030
-      IMAP_SUN_SENSOR_MZ            IMAP_SPACECRAFT    FIXED     -43031
-      IMAP_STAR_TRACKER_PX          IMAP_SPACECRAFT    FIXED     -43040
-      IMAP_STAR_TRACKER_MX          IMAP_SPACECRAFT    FIXED     -43041
-      IMAP_LOW_GAIN_ANTENNA         IMAP_SPACECRAFT    FIXED     -43050
-      IMAP_MED_GAIN_ANTENNA         IMAP_SPACECRAFT    FIXED     -43051
+      IMAP_SUN_SENSOR_PZ            IMAP_SPACECRAFT    FIXED     -42030
+      IMAP_SUN_SENSOR_MZ            IMAP_SPACECRAFT    FIXED     -42031
+      IMAP_STAR_TRACKER_PX          IMAP_SPACECRAFT    FIXED     -42040
+      IMAP_STAR_TRACKER_MX          IMAP_SPACECRAFT    FIXED     -42041
+      IMAP_LOW_GAIN_ANTENNA         IMAP_SPACECRAFT    FIXED     -42050
+      IMAP_MED_GAIN_ANTENNA         IMAP_SPACECRAFT    FIXED     -42051
+      IMAP_NUTATION_DAMPER_01       IMAP_SPACECRAFT    FIXED     -42060
+      IMAP_NUTATION_DAMPER_02       IMAP_SPACECRAFT    FIXED     -42061
 
       IMAP-Lo (100-149)
       --------------------------
-      IMAP_LO_BASE                  IMAP_SPACECRAFT    FIXED     -43100
-      IMAP_LO_PIVOT                 IMAP_LO_BASE       CK        -43101
-      IMAP_LO_ENA_SENSOR            IMAP_LO_PIVOT      FIXED     -43102
-      IMAP_LO_STAR_SENSOR           IMAP_LO_PIVOT      FIXED     -43103
-      IMAP_LO                       IMAP_SPACECRAFT    CK        -43105
+      IMAP_LO_BASE                  IMAP_SPACECRAFT    FIXED     -42100
+      IMAP_LO_PIVOT                 IMAP_LO_BASE       CK        -42101
+      IMAP_LO_ENA_SENSOR            IMAP_LO_PIVOT      FIXED     -42102
+      IMAP_LO_STAR_SENSOR           IMAP_LO_PIVOT      FIXED     -42103
 
       IMAP-Hi (150-199)
       --------------------------
-      IMAP_HI_45                    IMAP_SPACECRAFT    FIXED     -43150
-      IMAP_HI_90                    IMAP_SPACECRAFT    FIXED     -43175
+      IMAP_HI_45                    IMAP_SPACECRAFT    FIXED     -42150
+      IMAP_HI_90                    IMAP_SPACECRAFT    FIXED     -42175
 
       IMAP-Ultra (200-249)
       --------------------------
-      IMAP_ULTRA_45                 IMAP_SPACECRAFT    FIXED     -43200
-      IMAP_ULTRA_90                 IMAP_SPACECRAFT    FIXED     -43225
+      IMAP_ULTRA_45                 IMAP_SPACECRAFT    FIXED     -42200
+      IMAP_ULTRA_90                 IMAP_SPACECRAFT    FIXED     -42225
 
       MAG (250-299)
       --------------------------
-      IMAP_MAG                      IMAP_SPACECRAFT    FIXED     -43250
+      IMAP_MAG                      IMAP_SPACECRAFT    FIXED     -42250
 
       SWE (300-349)
       --------------------------
-      IMAP_SWE                      IMAP_SPACECRAFT    FIXED     -43300
-      IMAP_SWE_DETECTOR_P63         IMAP_SWE           FIXED     -43301
-      IMAP_SWE_DETECTOR_P42         IMAP_SWE           FIXED     -43302
-      IMAP_SWE_DETECTOR_P21         IMAP_SWE           FIXED     -43303
-      IMAP_SWE_DETECTOR_000         IMAP_SWE           FIXED     -43304
-      IMAP_SWE_DETECTOR_M21         IMAP_SWE           FIXED     -43305
-      IMAP_SWE_DETECTOR_M42         IMAP_SWE           FIXED     -43306
-      IMAP_SWE_DETECTOR_M63         IMAP_SWE           FIXED     -43307
+      IMAP_SWE                      IMAP_SPACECRAFT    FIXED     -42300
+      IMAP_SWE_DETECTOR_P63         IMAP_SWE           FIXED     -42301
+      IMAP_SWE_DETECTOR_P42         IMAP_SWE           FIXED     -42302
+      IMAP_SWE_DETECTOR_P21         IMAP_SWE           FIXED     -42303
+      IMAP_SWE_DETECTOR_000         IMAP_SWE           FIXED     -42304
+      IMAP_SWE_DETECTOR_M21         IMAP_SWE           FIXED     -42305
+      IMAP_SWE_DETECTOR_M42         IMAP_SWE           FIXED     -42306
+      IMAP_SWE_DETECTOR_M63         IMAP_SWE           FIXED     -42307
 
       SWAPI (350-399)
       --------------------------
-      IMAP_SWAPI                    IMAP_SPACECRAFT    FIXED     -43350
-      IMAP_SWAPI_APERTURE_L         IMAP_SWAPI         FIXED     -43351
-      IMAP_SWAPI_APERTURE_R         IMAP_SWAPI         FIXED     -43352
-      IMAP_SWAPI_SUNGLASSES         IMAP_SWAPI         FIXED     -43353
+      IMAP_SWAPI                    IMAP_SPACECRAFT    FIXED     -42350
+      IMAP_SWAPI_APERTURE_L         IMAP_SWAPI         FIXED     -42351
+      IMAP_SWAPI_APERTURE_R         IMAP_SWAPI         FIXED     -42352
+      IMAP_SWAPI_SUNGLASSES         IMAP_SWAPI         FIXED     -42353
 
       CODICE (400-499)
       --------------------------
-      IMAP_CODICE                   IMAP_SPACECRAFT    FIXED     -43400
-      IMAP_CODICE_LO_APERTURE_01    IMAP_CODICE        FIXED     -43401
-      IMAP_CODICE_LO_APERTURE_02    IMAP_CODICE        FIXED     -43402
-      IMAP_CODICE_LO_APERTURE_03    IMAP_CODICE        FIXED     -43403
-      IMAP_CODICE_LO_APERTURE_04    IMAP_CODICE        FIXED     -43404
-      IMAP_CODICE_LO_APERTURE_05    IMAP_CODICE        FIXED     -43405
-      IMAP_CODICE_LO_APERTURE_06    IMAP_CODICE        FIXED     -43406
-      IMAP_CODICE_LO_APERTURE_07    IMAP_CODICE        FIXED     -43407
-      IMAP_CODICE_LO_APERTURE_08    IMAP_CODICE        FIXED     -43408
-      IMAP_CODICE_LO_APERTURE_09    IMAP_CODICE        FIXED     -43409
-      IMAP_CODICE_LO_APERTURE_10    IMAP_CODICE        FIXED     -43410
-      IMAP_CODICE_LO_APERTURE_11    IMAP_CODICE        FIXED     -43411
-      IMAP_CODICE_LO_APERTURE_12    IMAP_CODICE        FIXED     -43412
-      IMAP_CODICE_LO_APERTURE_13    IMAP_CODICE        FIXED     -43413
-      IMAP_CODICE_LO_APERTURE_14    IMAP_CODICE        FIXED     -43414
-      IMAP_CODICE_LO_APERTURE_15    IMAP_CODICE        FIXED     -43415
-      IMAP_CODICE_LO_APERTURE_16    IMAP_CODICE        FIXED     -43416
-      IMAP_CODICE_LO_APERTURE_17    IMAP_CODICE        FIXED     -43417
-      IMAP_CODICE_LO_APERTURE_18    IMAP_CODICE        FIXED     -43418
-      IMAP_CODICE_LO_APERTURE_19    IMAP_CODICE        FIXED     -43419
-      IMAP_CODICE_LO_APERTURE_20    IMAP_CODICE        FIXED     -43420
-      IMAP_CODICE_LO_APERTURE_21    IMAP_CODICE        FIXED     -43421
-      IMAP_CODICE_LO_APERTURE_22    IMAP_CODICE        FIXED     -43422
-      IMAP_CODICE_LO_APERTURE_23    IMAP_CODICE        FIXED     -43423
-      IMAP_CODICE_LO_APERTURE_24    IMAP_CODICE        FIXED     -43424
-      IMAP_CODICE_HI_APERTURE_01    IMAP_CODICE        FIXED     -43425
-      IMAP_CODICE_HI_APERTURE_02    IMAP_CODICE        FIXED     -43426
-      IMAP_CODICE_HI_APERTURE_03    IMAP_CODICE        FIXED     -43427
-      IMAP_CODICE_HI_APERTURE_04    IMAP_CODICE        FIXED     -43428
-      IMAP_CODICE_HI_APERTURE_05    IMAP_CODICE        FIXED     -43429
-      IMAP_CODICE_HI_APERTURE_06    IMAP_CODICE        FIXED     -43430
-      IMAP_CODICE_HI_APERTURE_07    IMAP_CODICE        FIXED     -43431
-      IMAP_CODICE_HI_APERTURE_08    IMAP_CODICE        FIXED     -43432
-      IMAP_CODICE_HI_APERTURE_09    IMAP_CODICE        FIXED     -43433
-      IMAP_CODICE_HI_APERTURE_10    IMAP_CODICE        FIXED     -43434
-      IMAP_CODICE_HI_APERTURE_11    IMAP_CODICE        FIXED     -43435
-      IMAP_CODICE_HI_APERTURE_12    IMAP_CODICE        FIXED     -43436
+      IMAP_CODICE                   IMAP_SPACECRAFT    FIXED     -42400
+      IMAP_CODICE_LO_APERTURE_01    IMAP_CODICE        FIXED     -42401
+      IMAP_CODICE_LO_APERTURE_02    IMAP_CODICE        FIXED     -42402
+      IMAP_CODICE_LO_APERTURE_03    IMAP_CODICE        FIXED     -42403
+      IMAP_CODICE_LO_APERTURE_04    IMAP_CODICE        FIXED     -42404
+      IMAP_CODICE_LO_APERTURE_05    IMAP_CODICE        FIXED     -42405
+      IMAP_CODICE_LO_APERTURE_06    IMAP_CODICE        FIXED     -42406
+      IMAP_CODICE_LO_APERTURE_07    IMAP_CODICE        FIXED     -42407
+      IMAP_CODICE_LO_APERTURE_08    IMAP_CODICE        FIXED     -42408
+      IMAP_CODICE_LO_APERTURE_09    IMAP_CODICE        FIXED     -42409
+      IMAP_CODICE_LO_APERTURE_10    IMAP_CODICE        FIXED     -42410
+      IMAP_CODICE_LO_APERTURE_11    IMAP_CODICE        FIXED     -42411
+      IMAP_CODICE_LO_APERTURE_12    IMAP_CODICE        FIXED     -42412
+      IMAP_CODICE_LO_APERTURE_13    IMAP_CODICE        FIXED     -42413
+      IMAP_CODICE_LO_APERTURE_14    IMAP_CODICE        FIXED     -42414
+      IMAP_CODICE_LO_APERTURE_15    IMAP_CODICE        FIXED     -42415
+      IMAP_CODICE_LO_APERTURE_16    IMAP_CODICE        FIXED     -42416
+      IMAP_CODICE_LO_APERTURE_17    IMAP_CODICE        FIXED     -42417
+      IMAP_CODICE_LO_APERTURE_18    IMAP_CODICE        FIXED     -42418
+      IMAP_CODICE_LO_APERTURE_19    IMAP_CODICE        FIXED     -42419
+      IMAP_CODICE_LO_APERTURE_20    IMAP_CODICE        FIXED     -42420
+      IMAP_CODICE_LO_APERTURE_21    IMAP_CODICE        FIXED     -42421
+      IMAP_CODICE_LO_APERTURE_22    IMAP_CODICE        FIXED     -42422
+      IMAP_CODICE_LO_APERTURE_23    IMAP_CODICE        FIXED     -42423
+      IMAP_CODICE_LO_APERTURE_24    IMAP_CODICE        FIXED     -42424
+      IMAP_CODICE_HI_APERTURE_01    IMAP_CODICE        FIXED     -42425
+      IMAP_CODICE_HI_APERTURE_02    IMAP_CODICE        FIXED     -42426
+      IMAP_CODICE_HI_APERTURE_03    IMAP_CODICE        FIXED     -42427
+      IMAP_CODICE_HI_APERTURE_04    IMAP_CODICE        FIXED     -42428
+      IMAP_CODICE_HI_APERTURE_05    IMAP_CODICE        FIXED     -42429
+      IMAP_CODICE_HI_APERTURE_06    IMAP_CODICE        FIXED     -42430
+      IMAP_CODICE_HI_APERTURE_07    IMAP_CODICE        FIXED     -42431
+      IMAP_CODICE_HI_APERTURE_08    IMAP_CODICE        FIXED     -42432
+      IMAP_CODICE_HI_APERTURE_09    IMAP_CODICE        FIXED     -42433
+      IMAP_CODICE_HI_APERTURE_10    IMAP_CODICE        FIXED     -42434
+      IMAP_CODICE_HI_APERTURE_11    IMAP_CODICE        FIXED     -42435
+      IMAP_CODICE_HI_APERTURE_12    IMAP_CODICE        FIXED     -42436
 
       HIT (500-699)
       --------------------------
-      IMAP_HIT                      IMAP_SPACECRAFT    FIXED     -43500
-      IMAP_HIT_L1_APERTURE_01       IMAP_HIT           FIXED     -43501
-      IMAP_HIT_L1_APERTURE_02       IMAP_HIT           FIXED     -43502
-      IMAP_HIT_L1_APERTURE_03       IMAP_HIT           FIXED     -43503
-      IMAP_HIT_L1_APERTURE_04       IMAP_HIT           FIXED     -43504
-      IMAP_HIT_L1_APERTURE_05       IMAP_HIT           FIXED     -43505
-      IMAP_HIT_L1_APERTURE_06       IMAP_HIT           FIXED     -43506
-      IMAP_HIT_L1_APERTURE_07       IMAP_HIT           FIXED     -43507
-      IMAP_HIT_L1_APERTURE_08       IMAP_HIT           FIXED     -43508
-      IMAP_HIT_L1_APERTURE_09       IMAP_HIT           FIXED     -43509
-      IMAP_HIT_L1_APERTURE_10       IMAP_HIT           FIXED     -43510
+      IMAP_HIT                      IMAP_SPACECRAFT    FIXED     -42500
+      IMAP_HIT_L1_APERTURE_01       IMAP_HIT           FIXED     -42501
+      IMAP_HIT_L1_APERTURE_02       IMAP_HIT           FIXED     -42502
+      IMAP_HIT_L1_APERTURE_03       IMAP_HIT           FIXED     -42503
+      IMAP_HIT_L1_APERTURE_04       IMAP_HIT           FIXED     -42504
+      IMAP_HIT_L1_APERTURE_05       IMAP_HIT           FIXED     -42505
+      IMAP_HIT_L1_APERTURE_06       IMAP_HIT           FIXED     -42506
+      IMAP_HIT_L1_APERTURE_07       IMAP_HIT           FIXED     -42507
+      IMAP_HIT_L1_APERTURE_08       IMAP_HIT           FIXED     -42508
+      IMAP_HIT_L1_APERTURE_09       IMAP_HIT           FIXED     -42509
+      IMAP_HIT_L1_APERTURE_10       IMAP_HIT           FIXED     -42510
 
       IDEX (700-749)
       --------------------------
-      IMAP_IDEX                     IMAP_SPACECRAFT    FIXED     -43700
-      IMAP_IDEX_DETECTOR            IMAP_IDEX          FIXED     -43701
-      IMAP_IDEX_FULL_SCIENCE        IMAP_IDEX          FIXED     -43702
+      IMAP_IDEX                     IMAP_SPACECRAFT    FIXED     -42700
+      IMAP_IDEX_DETECTOR            IMAP_IDEX          FIXED     -42701
+      IMAP_IDEX_FULL_SCIENCE        IMAP_IDEX          FIXED     -42702
 
       GLOWS (750-799)
       --------------------------
-      IMAP_GLOWS                    IMAP_SPACECRAFT    FIXED     -43750
+      IMAP_GLOWS                    IMAP_SPACECRAFT    FIXED     -42750
 
 
 IMAP Frame Tree
@@ -583,6 +578,10 @@ IMAP Frame Tree
            IMAP_LOW_GAIN_ANTENNA
            |
            IMAP_MED_GAIN_ANTENNA
+           |
+           IMAP_NUTATION_DAMPER_01
+           |
+           IMAP_NUTATION_DAMPER_02
            |
            IMAP_LO_BASE
            |    |
@@ -661,19 +660,6 @@ IMAP Frame Tree
 
 IMAP Spacecraft Frame
 ========================================================================
-
-   \begindata
-
-        FRAME_IMAP_SPACECRAFT       = -43000
-        FRAME_-43000_NAME           = 'IMAP_SPACECRAFT'
-        FRAME_-43000_CLASS          = 3
-        FRAME_-43000_CLASS_ID       = -43000
-        FRAME_-43000_CENTER         = -43
-        CK_-43000_SCLK              = -43
-        CK_-43000_SPK               = -43
-
-   \begintext
-
 
    The orientation of the spacecraft body frame with respect to an
    inertial frame, J2000 for IMAP, is provided by a C-kernel (see [3]
@@ -808,12 +794,12 @@ IMAP Spacecraft Frame
                                           -----------
 
 
-   IMAP Component Location - Azimuth and Elevation
+   IMAP Component Location and Orientation
    ---------------------------------------------------------------------
 
    Payload and subsystem component locations are specified[5,6] in the
    Observatory Mechanical Design Reference Frame (described above).
-   Locations are defined in azimuth and elevation (and resultant
+   Boresights are defined in azimuth and elevation (and resultant
    direction cosign matrices) of these angles[6] in the same reference
    frame. The azimuth and elevation angle diagram is provided below.
 
@@ -853,176 +839,17 @@ IMAP Spacecraft Frame
                                    ``'``
 
 
-   IMAP Component Orientation - Euler Angles
-   ---------------------------------------------------------------------
+   \begindata
 
-   Azimuth and elevation (and the corresponding rotation matrices) are
-   also used to specify look direction boresight of the science payload
-   components and thrusters. However, these two angles are not adequate
-   to specify the complete orientation of the components. The spacecraft
-   subsystems such as the star trackers have complete rotation matrices
-   that fully define the orientation of each component. These matrices,
-   while complete, are not conducive to visualizing the orientation of a
-   component on the spacecraft bus.
+        FRAME_IMAP_SPACECRAFT       = -43000
+        FRAME_-43000_NAME           = 'IMAP_SPACECRAFT'
+        FRAME_-43000_CLASS          = 3
+        FRAME_-43000_CLASS_ID       = -43000
+        FRAME_-43000_CENTER         = -43
+        CK_-43000_SCLK              = -43
+        CK_-43000_SPK               = -43
 
-   As it happens, when applied to rotations, the azimuth and elevation
-   are nearly identitical to the first two Euler angles of the ZXZ
-   intrinsic rotation. For the Euler angles (A, B, Y), this is defined
-   as follows[11].
-
-   Let xyz represent the coordinate axes of the fixed frame, and XYZ
-   are the axes of the fully rotated frame expressed in the xyz frame.
-   Three successive, ordered rotations about the axes are performed:
-
-   1) Righthanded rotation about z by the angle A ∈ [-π, π); the rotated
-      frame is defined x'y'z', with z' = z. The new frame x'y'z' is
-      expressed in the coordinates of the original frame xyz.
-
-   2) Righthanded rotation about x' by the angle B ∈ [0,π]; the rotated
-      frame is defined x"y"z", with x" = x'. The new frame x"y"z" is
-      expressed in the coordinates of the original frame xyz.
-
-   3) Righthanded rotation about z" by the angle Y ∈ [-π,π); the rotated
-      frame is defined XYZ, with Z = z".  The final frame XYZ is
-      expressed in the coordinates of the original frame xyz.
-
-
-                               Euler Angles
-                          Intrinsic ZXZ Rotation
-
-                                   z axis
-                                     .
-                                     |       Y axis
-                                  _._.         /
-                             , B `   |        /
-                  Z axis  ,-`        .       /
-                      ^, ^           |      /
-                        ^,           .     /
-                          ^,         |    /
-                            ^,       .   /
-                              ^,     |  /             _ X axis
-                                ^,   . /        _ ~ ^
-                                  ^, |/   _ ~ ^      ^
-                                   .~ ~ ^             |
-                             .~ '`    \ ^~            ;
-                       .~ '` \         \   ^~         ;
-                 .~ '`        ',        \     ^~     ,
-           .~ '`                ` A      \       ^  Y
-       x axis                       `^~-> \        , ~
-                                           \     ~`    ^~
-                                            \- ^          ^~
-                                             \            y axis
-                                              \
-                                          x'=x" axis
-
-
-   Comparing the two figures, we see that A = azimuth and B appears to
-   coincide with elevation. However, while B lies on the range [0,π],
-   conventionally, elevation ∈ [-π/2,π/2]. This range for elevation does
-   not capture all possible orientations, e.g., a playing card facing
-   upward cannot be placed facing downward with elevation ∈ [-π/2,π/2].
-
-   So, we need to supplement the azimuth and elevation nomenclature with
-   fully specified Euler angles.
-
-   The technical documents [4,5,6] give rotation matrix elements to six
-   decimal places, which is not sufficient for accurate pointing in the
-   SPICE toolkit. The remedy to this inaccuracy is provided below.
-
-   Given an insufficiently-accurate rotation matrix, M, with column
-   vectors Vx, Vy, Vz:
-
-            Vx    Vy    Vz
-
-          [ M11   M12   M13 ]
-          [                 ]
-      M = [ M21   M22   M23 ]
-          [                 ]
-          [ M31   M32   M33 ]
-
-   A rotation matrix, R, with column unit vectors Ux, Uy, Uz:
-
-            Ux    Uy    Uz
-
-          [ R11   R12   R13 ]
-          [                 ]
-      R = [ R21   R22   R23 ]
-          [                 ]
-          [ R31   R32   R33 ]
-
-   is calculated so that column vectors are orthonormal to within double
-   precision accuracy (an operation SPICE calls "sharpening"):
-
-      Uz = Vz / |Vz|
-
-      Uy = Uz x (Vx / |Vx|)
-
-      Ux = Uy x Uz
-
-   These calculations are done outside of the SPICE library, but using
-   numerically stable algorithms as SPICE does. (An experienced SPICE
-   developer might comment that SPICE sharpens a matrix starting with
-   the X column vector, not the Z column vector as done here. This is
-   done starting with Z here to most faithfully represent the
-   Z-direction of the engineering documents as possible.)
-
-   With a precise (though not necessarily accurate) rotation matrix,
-   the instrinsic ZXZ Euler angles (A, B, Y) are calculated:
-
-      A' = atan2(R13, -R23)
-                   ______________
-      B' = atan2(\/ 1 - R33 x R33 , R33)
-
-      Y' = atan2(R31, R32)
-
-   These values are rounded to regain the assumed original orientation:
-
-      A = round(A') to nearest 1/1000th degree
-
-      B = round(B') to nearest 1/1000th degree
-
-      Y = round(Y') to nearest 1/1000th degree
-
-   And finally, the rotation matrix elements are recalculated:
-
-      R11 =  c1 x c3 - s1 x c2 x s3
-
-      R21 =  s1 x c3 + c1 x c2 x s3
-
-      R31 =  s2 x s3
-
-      R12 = -c1 x s3 - s1 x c2 x c3
-
-      R22 = -s1 x s3 + c1 x c2 x c3
-
-      R32 =  s2 x c3
-
-      R13 =  s1 x s2
-
-      R23 = -c1 x s2
-
-      R33 =  c2
-
-   where:
-
-      c1 = cos(A)
-
-      s1 = sin(A)
-
-      c2 = cos(B)
-
-      s2 = sin(B)
-
-      c3 = cos(Y)
-
-      s3 = sin(Y)
-
-   When B = 0, the angles A and Y are degenerate; Y = 0 in this case.
-
-   In the subsequent frames defined below, when Euler angles (A, B, Y)
-   are referenced without further discussion, they will refer to the
-   Euler angles as defined here. Otherwise, definitions will be given
-   inline with the discussion.
+   \begintext
 
 
 IMAP Thruster Frames
@@ -1033,7 +860,7 @@ IMAP Thruster Frames
    spacecraft frame[6], at the intersection of the thrust axis and the
    nozzle exit plane. The unit direction vectors listed in the table
    below point in the direction of the thruster exhaust. The positional
-   information may be captured in the IMAP structure SPK, while the
+   information is captured in the IMAP structure SPK, while the
    orientation information is captured here.
 
 
@@ -1141,15 +968,15 @@ IMAP Thruster Frames
                                      |
                                      |
                                  _. -|- ._
-                               ,'    |    ',
-                               ,     |     ,
-                               | -.,_|_,.- |
-                               '           '
-                                '         '
-                                 ;       ;
-                                  ;     ;
-                                  :     ;
-                                   ,   ,         Toward
+                              ,'     |     ',
+                             |,      |      ,|
+                             | ' -.,_|_,.- ' |
+                             '               '
+                              \             /
+                               \           /
+                                \         /
+                                 \       /
+                                  \     /        Toward
                                    ',_,'     ^~      MAG
                              .~ '`      ^~      ^~      Boom
                        .~ '`               ^~      ^~
@@ -1417,362 +1244,39 @@ IMAP Thruster Frames
    \begintext
 
 
-IMAP Digital Sun Sensor and Star Tracker Frames
+IMAP Sun Sensor Frames
 ========================================================================
 
-   There are two digital sun sensors (DSS)[6]: one on the +Z side of the
+   There are two digital sun sensors (DSS): one on the +Z side of the
    spacecraft pointing in +Z direction, and one on the -Z side pointing
-   mostly in the radial direction with a 30° tilt in the -Z direction.
-   They are approximated aligned along the spacecraft Z axis, though the
-   origins are offset from absolute alignment by a few centimeters (see
-   table below). Azimuthally, the sun sensors are located near the SWAPI
-   instrument approximately 18° off of the Y-Z plane.
-
-   There are two star trackers mounted adjacent to each other on the
-   underside of the spacecraft close to the -Z digital star sensor[6].
-   Their boresights are generally downward (towards -Z), with an angular
-   separation of 24°. One is angled toward the +X direction, the other
-   angled towards the -X direction.
-
-   Positional information may be captured in the IMAP structure SPK,
+   mostly in the radial direction with a mild tilt in the -Z direction.
+   The positional information is captured in the IMAP structure SPK,
    while the orientation information is captured here.
 
-
-   Digital Sun Sensor    ID      X (mm)    Y (mm)    Z (mm)    Loc. Azim
-   --------------------  ------  --------  --------  --------  ---------
-   IMAP_SUN_SENSOR_PZ    -43030   -364.22  -1121.90   1301.67   162.014°
-   IMAP_SUN_SENSOR_MZ    -43031   -379.11  -1167.77     72.89   162.014°
-
-
-   Digital Star Tracker  ID      X (mm)    Y (mm)    Z (mm)    Loc. Azim
-   --------------------  ------  --------  --------  --------  ---------
-   IMAP_STAR_TRACKER_PX  -43040    -45.75   -906.66    159.88   177.111°
-   IMAP_STAR_TRACKER_MX  -43041   -188.05   -881.57    142.79   167.959°
-
-
-   #####################################################################
-   #                     /                            _-        __.----#
-   #                   ,'                           ~`     _.~^'       #
-   #                  /                           ~`    ,~^            #
-   #                ,'   +Z axis facing Sun     .`    .^       +X axis #
-   #               /        into page          /    .^               . #
-   #              |                           :    /_,-----,_       /|\#
-   #              |                          ~    ~`         ^.      | #
-   #              |                         ^    ^             ^_    | #
-   #              |                        /    /                ,   | #
-   #              |                       ,    ,                 ;   | #
-   #              |                       ;    ;                  }  | #
-   #              |           ___        :    :                   ~ ___#
-   # -Y axis   ___|         .`   `.      |    |                   }/  _#
-   # <------  |===|        ;+X Star;     |    |.                 ;/ (` #
-   #              |        ;Tracker;     |    |'                ; \ (,_#
-   #              |        `,     ,`     |    | ',             ,   \___#
-   #              |          '---'       :    :   '-.,_____,.-`     _,~#
-   #              |              _,;@     ;    ;                 ,"    #
-   #     /|       |        @*^^'`         :    :                ;      #
-   #  /^' {    _,;|            ,---,       ;    ;              ^       #
-   # \    *^^'`   |          .^     ^.      ~    ~            {        #
-   # |  SWAPI     {  _,      |-X Star|       \    \           |        #
-   #  \          _,;*^ \     .Tracker.        \    *          {        #
-   #  |    *^^'`   \ -Z DSS   ^.___.^          ^,   `~_       \        #
-   #  \     }       \   _}                       ^_    "~_     ^,      #
-   #    ^^'"\\       \*^                           ^,     '-_    ~_    #
-   #                  \   (+Z DSS not visible)       "~_      " -, '-  #
-   #####################################################################
-
-
-   Digital Sun Sensors (DSS)
-   ---------------------------------------------------------------------
-
    Each DSS has a frame defined so that the look-direction is along the
-   +Z' axis. The digital image rows and columns are aligned with the X'
-   and Y' axes of the frame.
-
-
-                             DSS Look Direction
-                                Local Frame
-
-                                  +Z' axis
-                                     |
-                                     |
-                                     |
-                                     |
-                                     |
-                                     |
-                                   .~|'`^~
-                             .~ '`   |     ^~
-                       .~ '`   __,=# |   ,_   ^~
-                 .~ '`   __,=#^^^    |@   ^%,_   ^~
-                ~    ,=#^^^          |       ^%,_   ^~
-                | ^~              ,.~^~         ^%,_   ^~
-                |    ^~     ,.~ '`      ^~         ^%    ,^
-                |     ,.^~' @              ^~       .~ '` |
-                ^~.''`     ^~                @^~ '`       |
-           .~ '``  ^~         ^~         .~ '`   ^~       |
-      +X' axis        ^~         ^~.~ '`            ^~.~ '`
-                         ^~        |            .~ '`  ^~
-                            ^~     |      .~ '`           ^~
-                               ^~  |.~ '`                +Y' axis
-
-
-   The rotation matrices orienting each DSS on the spacecraft are
-   given by [6]:
-
-      [X]      [   0.951057   0.309017   0.000000  ] [X']
-      [Y]    = [  -0.309017   0.951057   0.000000  ] [Y']
-      [Z]S/C   [   0.000000   0.000000   1.000000  ] [Z'] +Z DSS
-
-      [X]      [   0.951078  -0.154380  -0.267616  ] [X']
-      [Y]    = [  -0.308952  -0.475579  -0.823640  ] [Y']
-      [Z]S/C   [  -0.000116   0.866025  -0.500000  ] [Z'] -Z DSS
-
-   Using the method described in a previous section, the Euler angles
-   rounded to 1/1000th of a degree are:
-
-      +Z DSS: (A, B, Y)  =  (  -18.000°,   0.000°,  0.000°  )
-
-      -Z DSS: (A, B, Y)  =  (  -18.000°, 120.000°, -0.008°  )
-
-   Use the formulas described in the Euler angles section above, the
-   rotation matrices have been recalculated to double precision.
-
-
-   \begindata
-
-   FRAME_IMAP_SUN_SENSOR_PZ    = -43030
-   FRAME_-43030_NAME           = 'IMAP_SUN_SENSOR_PZ'
-   FRAME_-43030_CLASS          = 4
-   FRAME_-43030_CLASS_ID       = -43030
-   FRAME_-43030_CENTER         = -43
-   TKFRAME_-43030_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43030_SPEC         = 'MATRIX'
-   TKFRAME_-43030_MATRIX       = (  0.95105651629515350,
-                                   -0.30901699437494734,
-                                    0.00000000000000000,
-                                    0.30901699437494734,
-                                    0.95105651629515350,
-                                    0.00000000000000000,
-                                   -0.00000000000000000,
-                                   -0.00000000000000000  )
-
-   FRAME_IMAP_SUN_SENSOR_MZ    = -43031
-   FRAME_-43031_NAME           = 'IMAP_SUN_SENSOR_MZ'
-   FRAME_-43031_CLASS          = 4
-   FRAME_-43031_CLASS_ID       = -43031
-   FRAME_-43031_CENTER         = -43
-   TKFRAME_-43031_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43031_SPEC         = 'MATRIX'
-   TKFRAME_-43031_MATRIX       = (  0.95107808048040110,
-                                   -0.30895059509261280,
-                                   -0.00012091995722272,
-                                   -0.15437570314113858,
-                                   -0.47557140042407403,
-                                    0.86602539534263330,
-                                   -0.26761656732981740,
-                                   -0.82363910354633210,
-                                   -0.49999999999999983  )
-
-   \begintext
-
-
-   Star Trackers
-   ---------------------------------------------------------------------
-
-   Each star tracker has a frame defined so that the look-direction is
-   along the +Z' axis. The digital image rows and columns are aligned
+   +Z' axis (toward Sun). The digital image rows and columns are aligned
    with the X' and Y' axes of the frame.
 
-
-                         Star Tracker Look Direction
-                                Local Frame
-
-                                  +Z' axis
-
-                                     |
-                                     |
-                                     |
-                                     |
-                                 _. -|- ._
-                              ,'     |     ',
-                             |  .~ '` ^~    ,|
-                          .~ '` ~ .,_ _,.^~' |
-                    .~ '`    |              ^~
-              .~ '`          |,             ,| ^~
-          +X' axis             ' -.,_ _,.- '      ^~
-                               |           |         ^~
-                               |           |            ^~
-                               |           |          +Y' axis
-                                '-.,_ _,.-'
+      [X]      [  cos(az) -sin(az)  0 ] [X']
+      [Y]    = [  sin(az)  cos(az)  0 ] [Y']
+      [Z]S/C   [      0       0     1 ] [Z']Digital Sun Sensor
 
 
-
-   When oriented on the spacecraft:
-
-   - The tracker X' axis mostly points towards the spacecraft -X axis
-   - The tracker Y' axis mostly points towards the spacecraft +Y axis
-   - The tracker Z' axis mostly points towards the spacecraft -Z axis
-
-
-   #####################################################################
-   #                                                           {  {    #
-   #                                                           )  )    #
-   #                                                           @  @    #
-   #                                                          {  {     #
-   #                 _,~--~,_                                 |  |     #
-   #               ,"        ",                           ,-----,'     #
-   #             ;              ;                         |     |      #
-   #  +X Star   /                \                        |     |      #
-   #  Tracker  {              __,.-  +Y'                  '-----'      #
-   #           |         ..-^"    |:                          |  |     #
-   #           {         ;        ;}                          |  |     #
-   #           {\         ;      / }                          {  {     #
-   #            {^,       :    ,^ ;                            @  @    #
-   #             . ~_      ; _~  ,`                            |  |    #
-   #              `,  '~--~"   ,^ "'                           |  |    #
-   #              '"^--,__ `  '   "^                           {  {    #
-   #              `^       +X'    `"`                           )  )   #
-   #               "'              ^'                           |  |   #
-   #               ^'              '~                           {  {   #
-   #                ^,          __,,.~*^#                        )  )  #
-   #                ', _,.~-'^'`__,,.~*^#                        |  |  #
-   #             #-*~^'_,.~-'^'`    '"                           {  {  #
-   #             #-*~^'              "^                           @  @ #
-   #                 '"              `"`                          |  | #
-   #                 `^               ^`                          {  { #
-   #                  "`    _,~^^^~-.,'^                           )  )#
-   #                  ^' _-" _,~--~,_ ".'                          (   #
-   #                  '^/  ,"        ", \`                          \  #
-   #                   , ;              ;',                          \ #
-   #                   |/                \|                            #
-   #                   {              __,.-  +Y'      Spacecraft Axes  #
-   #         -X Star   |         ..-^"    |                            #
-   #         Tracker   {         ;        }             +X             #
-   #                    \         ;      /               |             #
-   #                     ^,       :    ,^                |             #
-   #                       ~_      ; _~                  |             #
-   #                          '~--~"                     |             #
-   #                               `                     x-------- +Y  #
-   #                               +X'                +Z into          #
-   #                                                    Page           #
-   #####################################################################
-
-
-   The rotation matrices orienting each star tracker on the spacecraft
-   are given by [6]:
-
-      [X]      [  -0.963287   0.173648   0.204753  ] [X']
-      [Y]    = [   0.169854   0.984808  -0.036104  ] [Y']
-      [Z]S/C   [  -0.207912   0.000000  -0.978148  ] [Z']+X Star Tracker
-
-
-      [X]      [  -0.963287   0.173648  -0.204753  ] [X']
-      [Y]    = [   0.169854   0.984808   0.036104  ] [Y']
-      [Z]S/C   [   0.207912   0.000000  -0.978148  ] [Z']-X Star Tracker
-
-   Using the method described in a previous section, the Euler angles
-   rounded to 1/1000th of a degree are:
-
-      +X Star Tracker: (A, B, Y)  =  (   80.000°, 168.000°, -90.000°  )
-
-      -X Star Tracker: (A, B, Y)  =  ( -100.000°, 168.000°,  90.000°  )
-
-   Use the formulas described in the Euler angles section above, the
-   rotation matrices have been recalculated to double precision.
-
-
-   \begindata
-
-   FRAME_IMAP_STAR_TRACKER_PX    = -43040
-   FRAME_-43040_NAME           = 'IMAP_STAR_TRACKER_PX'
-   FRAME_-43040_CLASS          = 4
-   FRAME_-43040_CLASS_ID       = -43040
-   FRAME_-43040_CENTER         = -43
-   TKFRAME_-43040_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43040_SPEC         = 'MATRIX'
-   TKFRAME_-43040_MATRIX       = ( -0.96328734079294150,
-                                    0.16985354835670569,
-                                   -0.20791169081775915,
-                                    0.17364817766693050,
-                                    0.98480775301220800,
-                                    0.00000000000000001,
-                                    0.20475304505920630,
-                                   -0.03610348622615415,
-                                   -0.97814760073380570 )
-
-   FRAME_IMAP_STAR_TRACKER_MX    = -43041
-   FRAME_-43041_NAME           = 'IMAP_STAR_TRACKER_MX'
-   FRAME_-43041_CLASS          = 4
-   FRAME_-43041_CLASS_ID       = -43041
-   FRAME_-43041_CENTER         = -43
-   TKFRAME_-43041_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43041_SPEC         = 'MATRIX'
-   TKFRAME_-43041_MATRIX       = ( -0.96328734079294150,
-                                    0.16985354835670533,
-                                    0.20791169081775915,
-                                    0.17364817766693014,
-                                    0.98480775301220800,
-                                    0.00000000000000001,
-                                   -0.20475304505920630,
-                                    0.03610348622615410,
-                                   -0.97814760073380570 )
-
-   \begintext
+IMAP Star Trackers Frames
+========================================================================
 
 
 IMAP Antenna Frames
 ========================================================================
 
-   There are two antennas on the spacecraft (see earlier diagrams). The
-   low gain antenna (LGA) is located on the +Z side of the spacecraft
-   pointing in the +Z direction, while the medium gain antenna (MGA) is
-   located on the -Z side pointing in the -Z direction.
 
-
-   \begindata
-
-
-   FRAME_IMAP_THRUSTER_A1      = -43010
-   FRAME_-43010_NAME           = 'IMAP_THRUSTER_A1'
-   FRAME_-43010_CLASS          = 4
-   FRAME_-43010_CLASS_ID       = -43010
-   FRAME_-43010_CENTER         = -43
-   TKFRAME_-43010_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43010_SPEC         = 'MATRIX'
-   TKFRAME_-43010_MATRIX       = (  1,
-                                    0,
-                                    0,
-                                    0,
-                                    1,
-                                    0,
-                                    0,
-                                    0,
-                                    1  )
-
-   FRAME_IMAP_THRUSTER_A3      = -43012
-   FRAME_-43012_NAME           = 'IMAP_THRUSTER_A3'
-   FRAME_-43012_CLASS          = 4
-   FRAME_-43012_CLASS_ID       = -43012
-   FRAME_-43012_CENTER         = -43
-   TKFRAME_-43012_RELATIVE     = 'IMAP_SPACECRAFT'
-   TKFRAME_-43012_SPEC         = 'MATRIX'
-   TKFRAME_-43012_MATRIX       = ( -1,
-                                    0,
-                                    0,
-                                    0,
-                                    1,
-                                    0,
-                                    0,
-                                    0,
-                                   -1  )
-
-   \begintext
-
-
-IMAP-Lo Base Frame
+IMAP-Lo Frames
 ========================================================================
 
-   This frame is the nominal IMAP-Lo rotation to SPACECRAFT frame when
-   the boresight is at elevation 0 (90 degrees from the spin axis).
+   TODO: FIX ME...The orientation of the spacecraft body frame with
+   respect to an inertial
+   frame, for IMAP - ECLIPJ2000, is provided by a C-kernel (see [3]
+   for details).
 
    This frame specifies the rotating X,Y and pointing Z coordinate body
    frame.
@@ -1788,69 +1292,13 @@ IMAP-Lo Base Frame
    TKFRAME_-43100_MATRIX       = ( -0.866025,
                                     0.500000,
                                     0.000000,
-                                   -0.500000,
-                                   -0.866025,
+                                    -0.500000,
+                                    -0.866025,
                                     0.000000,
                                     0.000000,
                                     0.000000,
                                     1.000000 )
    TKFRAME_-43100_RELATIVE     = 'IMAP_SPACECRAFT'
-
-   \begintext
-
-IMAP-Lo
-========================================================================
-
-   TODO: FIX ME...The orientation of the spacecraft body frame with
-   respect to an inertial
-   frame, for IMAP - ECLIPJ2000, is provided by a C-kernel (see [3]
-   for details).
-
-   This frame specifies the rotating X,Y and pointing Z coordinate body
-   frame.
-
-   \begindata
-
-
-   FRAME_IMAP_LO               = -43105
-   FRAME_-43105_NAME           = 'IMAP_LO'
-   FRAME_-43105_CLASS          = 3
-   FRAME_-43105_CLASS_ID       = -43105
-   FRAME_-43105_CENTER         = -43
-   CK_-43105_SCLK              = -43
-   CK_-43105_SPK               = -43
-
-
-   \begintext
-
-IMAP-Lo Star Sensor
-========================================================================
-
-   Lo Star Sensor is co-aligned with the ENA sensor
-
-   This frame specifies the rotating X,Y and pointing Z coordinate body
-   frame.
-
-   \begindata
-
-
-   FRAME_IMAP_LO_STAR_SENSOR   = -43103
-   FRAME_-43103_NAME           = 'IMAP_LO_STAR_SENSOR'
-   FRAME_-43103_CLASS          = 4
-   FRAME_-43103_CLASS_ID       = -43103
-   FRAME_-43103_CENTER         = -43
-   TKFRAME_-43103_SPEC         = 'MATRIX'
-   TKFRAME_-43103_MATRIX       = ( 1.000000,
-                                   0.000000,
-                                   0.000000,
-                                   0.000000,
-                                   1.000000,
-                                   0.000000,
-                                   0.000000,
-                                   0.000000,
-                                   1.000000 )
-   TKFRAME_-43103_RELATIVE     = 'IMAP_LO'
-
 
    \begintext
 
@@ -1872,15 +1320,15 @@ IMAP-Hi Frames
    FRAME_-43150_CLASS_ID       = -43150
    FRAME_-43150_CENTER         = -43
    TKFRAME_-43150_SPEC         = 'MATRIX'
-   TKFRAME_-43150_MATRIX       = (  -0.668531,
-                                    0.233315,
-                                   -0.706138,
-                                    0.683013,
-                                   -0.183013,
-                                   -0.707107,
-                                   -0.294210,
-                                   -0.955024,
-                                   -0.037007 )
+   TKFRAME_-43150_MATRIX       = (  0.066987,
+                                   -0.250000,
+                                    0.965926,
+                                    0.965926,
+                                    0.258819,
+                                    0.000000,
+                                   -0.250000,
+                                    0.933013,
+                                    0.258819 )
    TKFRAME_-43150_RELATIVE     = 'IMAP_SPACECRAFT'
 
    \begintext
@@ -1905,15 +1353,15 @@ IMAP-Hi Frames
    FRAME_-43160_CLASS_ID       = -43160
    FRAME_-43160_CENTER         = -43
    TKFRAME_-43160_SPEC         = 'MATRIX'
-   TKFRAME_-43160_MATRIX       = ( 0.066987,
-                                   -0.250000,
-                                    0.965926,
-                                    0.965926,
-                                    0.258819,
-                                    0.000000,
-                                   -0.250000,
-                                    0.933013,
-                                    0.258819 )
+   TKFRAME_-43160_MATRIX       = ( -0.668531,
+                                    0.233315,
+                                   -0.706138,
+                                    0.683013,
+                                   -0.183013,
+                                   -0.707107,
+                                   -0.294210,
+                                   -0.955024,
+                                   -0.037007 )
    TKFRAME_-43160_RELATIVE     = 'IMAP_SPACECRAFT'
 
    \begintext
