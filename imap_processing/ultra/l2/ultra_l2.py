@@ -277,28 +277,36 @@ def build_dps_combined_exposure_time(
 
 
 def ultra_l2(
-    l1c_products: list,
+    data_dict: dict[str, xr.Dataset],
+    data_version: str,
     l2_spacing_deg: float = DEFAULT_SPACING_DEG,
-) -> xr.Dataset:
+) -> list[xr.Dataset]:
     """
     Generate Ultra L2 Product from L1C Products.
 
-    NOTE: This function is a placeholder and the majority of it
+    NOTE: This function is a placeholder and the majority of L2 processing
     will be implemented in the future.
 
     Parameters
     ----------
-    l1c_products : list
-        List of l1c products or paths to l1c products.
+    data_dict : dict[str, xr.Dataset]
+        Dictionary mapping l1c product IDs or names to to l1c products (xr.Datasets).
+    data_version : str
+        Version of the data product being created.
     l2_spacing_deg : float, optional
         The spacing in degrees of the output maps, by default DEFAULT_SPACING_DEG.
 
     Returns
     -------
-    xr.Dataset
-        L2 output dataset.
+    list[xarray.Dataset]
+        L2 output dataset, contained in list for consistency with other product levels.
     """
-    logger.info("Running ultra_l2 function")
+    l1c_product_names, l1c_products = zip(*data_dict.items())
+
+    logger.info(
+        "Running ultra_l2 function on the following L1C products:"
+        f"\n{l1c_product_names}"
+    )
     num_dps_pointings = len(l1c_products)
     frame_epochs = np.unique([l1c_product.epoch for l1c_product in l1c_products])
     logger.info(f"Number of DPS Pointings: {num_dps_pointings}")
@@ -365,16 +373,37 @@ def ultra_l2(
         build_dps_combined_exposure_time(l1c_products, all_pointings_matched_indices)
     )
 
-    combined_exptime_total = spatial_utils.rewrap_even_spaced_el_az_grid(
-        combined_exptime_total, extra_axis=False
-    )
-
     ds_l2 = xr.Dataset(
         {
-            # "counts": (["el", "az", "energy"], combined_counts), # TODO: Add counts
-            "exposure_time": (["el", "az"], combined_exptime_total),
+            "exposure": (
+                ["el", "az"],
+                spatial_utils.rewrap_even_spaced_el_az_grid(combined_exptime_total),
+                {"units": "s"},
+            ),
+            # TODO: Add the other required fields
+            # "counts": (["el", "az", "energy"], combined_counts),
+            # "counts_uncertainty": (["el", "az", "energy"], counts_uncertainty),
+            # "flux": (["el", "az", "energy"], flux),
+            # "flux_uncertainty": (["el", "az", "energy"], flux_uncertainty),
+            # "flux_uncertainty": (["el", "az", "energy"], flux_uncertainty),
+            # TODO: Determine whether to remove additional fields
+            "exposure_ultra_45": (
+                ["el", "az"],
+                spatial_utils.rewrap_even_spaced_el_az_grid(combined_exptime_45),
+                {"units": "s"},
+            ),
+            "exposure_ultra_90": (
+                ["el", "az"],
+                spatial_utils.rewrap_even_spaced_el_az_grid(combined_exptime_90),
+                {"units": "s"},
+            ),
         },
-        attrs={"epochs": frame_epochs},
+        attrs={
+            "epochs": frame_epochs,
+            "Data_version": data_version,
+        },
     )
 
-    return ds_l2
+    # Wrap the output in a list for consistency with other data product levels
+    output_datasets = [ds_l2]
+    return output_datasets

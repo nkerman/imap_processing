@@ -15,9 +15,6 @@ from imap_processing.ultra.l2 import ultra_l2
 
 DEFAULT_SPACING_DEG = 0.5
 
-# TODO: remove this where we set logger info to show
-logging.basicConfig(level=logging.INFO)
-
 
 @ensure_spice
 def mock_l1c_pset_product(
@@ -115,7 +112,9 @@ def mock_l1c_pset_product(
 class TestUltraL2:
     @typing.no_type_check
     @pytest.fixture()
-    def _setup_l1c_pset_products(self, l1c_spacing_deg=1, l2_spacing_deg=1):
+    def _setup_l1c_pset_products_and_index_maps(
+        self, l1c_spacing_deg=1, l2_spacing_deg=1
+    ):
         # Default to a courser spacing for faster tests
         self.l1c_spatial_bin_spacing_deg = l1c_spacing_deg
         self.l1c_products = [
@@ -130,6 +129,11 @@ class TestUltraL2:
                 np.arange(0, int(360 / self.l1c_spatial_bin_spacing_deg), 90)
             )
         ]
+
+        self.test_data_version = "v0.0.0"
+        self.test_data_dict = {
+            prod.attrs["Logical_file_id"]: prod for prod in self.l1c_products
+        }
 
         # Create a simple and unrealistic mapping of indices for testing where
         # all DPS indices map to the 0th HAE index in the 'push' method,
@@ -163,12 +167,14 @@ class TestUltraL2:
             assert not ultra_l2.is_ultra45(mock_l1c_pset_product(head="123456789"))
             assert "Found neither 45, nor 90 in descriptor string" in caplog.text
 
-    @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
-    @pytest.mark.usefixtures("_setup_l1c_pset_products")
+    @pytest.mark.usefixtures("_setup_l1c_pset_products_and_index_maps")
     def test_build_dps_combined_exposure_time(self):
-        # TODO: Determine if the code works w different spacing for target/source grid
         spacing_deg = self.l1c_spatial_bin_spacing_deg
+
+        # Add some random exposure time to 0th L1C product
+        self.l1c_products[0]["exposure_time"].values += np.random.randint(
+            0, 10, size=self.l1c_products[0]["exposure_time"].shape
+        )
 
         (combined_exptime_45, combined_exptime_90, combined_exptime_total) = (
             ultra_l2.build_dps_combined_exposure_time(
@@ -177,6 +183,7 @@ class TestUltraL2:
             )
         )
 
+        # Shape checks:
         assert (
             combined_exptime_45.shape
             == combined_exptime_90.shape
@@ -184,28 +191,35 @@ class TestUltraL2:
             == ((180 / spacing_deg) * (360 / spacing_deg),)
         )
 
-        # TODO: Make this test more stringent by checking the actual values expected
-        # # Because we set exptime to be bands of 1 on background of 0:
-        # # The min exptime should be >= 0*, the max should be <= number of l1c_products
-        # # The max of the 45 and 90 combined should be <= the number of l1c_products
-        # # with that head.
-        # # NOTE: *The min exptime is 0 currently, but could be unexpectedly
-        # # made >0 if the l1c_products geometry are changed in the fixture above.
-        # assert combined_exptime_total.min() == 0
-        # assert combined_exptime_total.max() <= len(self.l1c_products)
-        # assert combined_exptime_45.min() == 0
-        # assert combined_exptime_45.max() <= len(
-        #     [p for p in self.l1c_products if ultra_l2.is_ultra45(p)]
-        # )
-        # assert combined_exptime_90.min() == 0
-        # assert combined_exptime_90.max() <= len(
-        #     [p for p in self.l1c_products if not ultra_l2.is_ultra45(p)]
-        # )
+        # Two exposures of each head, and all pixels in each DPS frame are linked to
+        # pixel (0,0) of the HAE frame, so the combined exposure time should be the sum
+        # of the exposure times of the L1C products on pixel (0,0) and zero elsewhere.
+        total_exposure_time = np.sum(
+            [ds["exposure_time"].values.sum() for ds in self.l1c_products]
+        )
+        total_exposure_time_45 = np.sum(
+            [
+                ds["exposure_time"].values.sum()
+                for ds in self.l1c_products
+                if ultra_l2.is_ultra45(ds)
+            ]
+        )
+        total_exposure_time_90 = np.sum(
+            [
+                ds["exposure_time"].values.sum()
+                for ds in self.l1c_products
+                if not ultra_l2.is_ultra45(ds)
+            ]
+        )
 
-        # assert np.array_equal(
-        #     combined_exptime_total,
-        #     combined_exptime_45 + combined_exptime_90,
-        # )
+        np.testing.assert_equal(combined_exptime_total[0], total_exposure_time)
+        np.testing.assert_array_equal(combined_exptime_total[1:], 0)
+
+        np.testing.assert_equal(combined_exptime_45[0], total_exposure_time_45)
+        np.testing.assert_array_equal(combined_exptime_45[1:], 0)
+
+        np.testing.assert_equal(combined_exptime_90[0], total_exposure_time_90)
+        np.testing.assert_array_equal(combined_exptime_90[1:], 0)
 
     @pytest.mark.external_kernel()
     @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
@@ -291,17 +305,21 @@ class TestUltraL2:
 
     @pytest.mark.external_kernel()
     @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
-    @pytest.mark.usefixtures("_setup_l1c_pset_products")
+    @pytest.mark.usefixtures("_setup_l1c_pset_products_and_index_maps")
     def test_ultra_l2(self):
-        ds_l2 = ultra_l2.ultra_l2(
-            l1c_products=self.l1c_products,
+        output_datasets = ultra_l2.ultra_l2(
+            data_dict=self.test_data_dict,
+            data_version=self.test_data_version,
             l2_spacing_deg=1,
         )
 
-        # Check exposure time
-        np.testing.assert_equal(ds_l2["exposure_time"].shape, (180, 360))
+        assert len(output_datasets) == 1
+        ds_l2 = output_datasets[0]
+
+        # Check exposure time shape and values
+        np.testing.assert_equal(ds_l2["exposure"].shape, (180, 360))
         np.testing.assert_equal(
-            ds_l2["exposure_time"].values.sum(),
+            ds_l2["exposure"].values.sum(),
             np.sum(
                 [ds_l1c["exposure_time"].values.sum() for ds_l1c in self.l1c_products]
             ),
