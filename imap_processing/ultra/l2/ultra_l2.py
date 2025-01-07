@@ -199,7 +199,7 @@ def map_indices_frame_to_frame(
 @typing.no_type_check
 def build_dps_combined_exposure_time(
     l1c_products: list[xr.Dataset],
-    spacing_deg: float = DEFAULT_SPACING_DEG,
+    all_pointings_matched_indices: dict,
 ) -> tuple[NDArray, NDArray, NDArray]:
     """
     Build exposure time and time-averaged sensitivity maps on ecliptic inertial grid.
@@ -208,8 +208,19 @@ def build_dps_combined_exposure_time(
     ----------
     l1c_products : list[xr.Dataset]
         List of xarray Datasets containing the l1c products to combine.
-    spacing_deg : float, optional
-        The spacing of the grid in degrees, by default DEFAULT_SPACING_DEG.
+    all_pointings_matched_indices : dict
+        Dictionary containing the indices of the matched points between the DPS and HAE,
+        calculated both by 'pulling' from DPS to HAE and 'pushing' from HAE to DPS.
+        For each epoch key, the dictionary contains a sub-dictionary with the
+        following keys, each corresponding to a 1D array of indices:
+        - indices_hae_input: Indices of input grid points in the HAE frame
+        for the 'pull' method.
+        - indices_dps_proj: Corresponding indices of the grid points when
+        projected to DPS frame in the 'pull' method.
+        - indices_dps_input: Indices of input grid points in the DPS frame
+        for the 'push' method.
+        - indices_hae_proj: Corresponding indices of the grid points when
+        projected to HAE frame in the 'push' method.
 
     Returns
     -------
@@ -233,44 +244,29 @@ def build_dps_combined_exposure_time(
     combined_exptime_45 = np.zeros(num_el_bins_l1c * num_az_bins_l1c)
     combined_exptime_90 = np.zeros(num_el_bins_l1c * num_az_bins_l1c)
 
-    # Create ecliptic inertial grid onto which we will project the individual DPS frames
-    # Build the azimuth and elevation grid in the heliocentric ecliptic frame (HAE)
-    (az_range, el_range, az_grid, el_grid) = build_az_el_grid_cached(
-        spacing=spacing_deg,
-        input_degrees=True,
-        output_degrees=False,
-        centered_azimuth=False,  # (0, 2pi rad = 0, 360 deg)
-        centered_elevation=True,  # (-pi/2, pi/2 rad = -90, 90 deg)
-    )
-
     for prod_num, l1c_prod in enumerate(l1c_products):
         time = float(l1c_prod.epoch.values)
+        matched_index_subdict = all_pointings_matched_indices[time]
         logger.info(
             f"Projecting exposure time from product at time index {prod_num} "
             f"with epoch {time}."
         )
 
-        (
-            flat_indices_in,
-            flat_indices_proj,
-            az_grid_input_raveled,
-            el_grid_input_raveled,
-            input_az_in_proj_az,
-            input_el_in_proj_el,
-            input_az_in_proj_az_indices,
-            input_el_in_proj_el_indices,
-        ) = map_indices_frame_to_frame(
-            input_frame=geometry.SpiceFrame.ECLIPJ2000,
-            projection_frame=geometry.SpiceFrame.IMAP_DPS,
-            event_time=time,
-            input_frame_spacing_deg=spacing_deg,
-            projection_frame_spacing_deg=spacing_deg,
-        )
+        # Add to the combined exposure time arrays, 'pushing' from DPS to HAE
+        pointing_projected_exptime = np.zeros_like(combined_exptime_45)
 
-        # Add to the combined exposure time arrays
-        pointing_projected_exptime = l1c_prod.exposure_time.values.ravel(order="F")[
-            flat_indices_proj
-        ]
+        # Access the Dataset values outside of the loop for speed
+        raveled_l1c_exptime = l1c_prod.exposure_time.values.ravel(order="F")
+
+        # Correct but somewhat slow loop-based assignment of the exposure time values
+        for index_hae_proj, index_dps_input in zip(
+            matched_index_subdict["indices_hae_proj"],
+            matched_index_subdict["indices_dps_input"],
+        ):
+            pointing_projected_exptime[index_hae_proj] += raveled_l1c_exptime[
+                index_dps_input
+            ]
+
         if is_ultra45(l1c_prod):
             combined_exptime_45 += pointing_projected_exptime
         else:
@@ -316,7 +312,8 @@ def build_flux_maps(
     ValueError
         If the az, el, or energy bin centers don't match across l1c products.
     ValueError
-        _description_
+        If the bins are mismatched across different l1c products
+        or the spacing is not even.
     """
     # Check that all l1c products have the same shape of the az, el, energy bin coords
     for l1c_product in l1c_products:
@@ -337,6 +334,15 @@ def build_flux_maps(
             raise ValueError("Energy bin center shape mismatch.")
 
     (num_el, num_az, num_energy) = l1c_products[0].counts.shape
+
+    if num_az != num_el * 2:
+        raise ValueError(
+            "For even spacing, the number of azimuth bins must "
+            "be twice the number of elevation bins.\n"
+            f"Received: {num_az} azimuth bins and {num_el} elevation bins."
+        )
+
+    input_spacing_deg = 360 / num_az
 
     # This will contain the counts for each energy bin
     combined_counts = np.zeros((num_el * num_az, num_energy))
@@ -401,6 +407,8 @@ def build_flux_maps(
             input_frame=geometry.SpiceFrame.ECLIPJ2000,
             projection_frame=geometry.SpiceFrame.IMAP_DPS,
             event_time=time,
+            input_frame_spacing_deg=input_spacing_deg,
+            projection_frame_spacing_deg=spacing_deg,
         )[:2]
 
         # TODO: Replace with sum of counts across all l1c products on an inertial grid
@@ -409,21 +417,6 @@ def build_flux_maps(
         )[flat_indices_dps, :]
 
         combined_counts += pointing_projected_counts
-
-    # TODO: this will be removed in the final version
-    # Output the last pointing's data for use in development and testing
-    developer_dict = {
-        # "az_grid": az_grid,
-        # "el_grid": el_grid,
-        # "az_grid_raveled": az_grid_raveled,
-        # "el_grid_raveled": el_grid_raveled,
-        # "hae_az_in_dps_az": hae_az_in_dps_az,
-        # "hae_el_in_dps_el": hae_el_in_dps_el,
-        # "hae_az_in_dps_az_indices": hae_az_in_dps_az_indices,
-        # "hae_el_in_dps_el_indices": hae_el_in_dps_el_indices,
-        # "radii_helio": radii_helio,
-        # "all_dps_index_map_dict": all_dps_index_map_dict,
-    }
 
     return (
         combined_counts,
@@ -435,38 +428,63 @@ def build_flux_maps(
         energy_bin_edges,
         energy_midpoints,
         solid_angle_grid,
-        developer_dict,
     )
 
 
-def ultra_l2(l1c_products: list) -> xr.Dataset:
+def ultra_l2(
+    l1c_products: list,
+    l2_spacing_deg: float = DEFAULT_SPACING_DEG,
+) -> xr.Dataset:
     """
     Generate Ultra L2 Product from L1C Products.
 
-    NOTE: This function is a placeholder and will be implemented in the future.
+    NOTE: This function is a placeholder and the majority of it
+    will be implemented in the future.
 
     Parameters
     ----------
     l1c_products : list
         List of l1c products or paths to l1c products.
+    l2_spacing_deg : float, optional
+        The spacing in degrees of the output maps, by default DEFAULT_SPACING_DEG.
 
     Returns
     -------
     xr.Dataset
         L2 output dataset.
     """
-    # TODO: come back to this! its just a sketch so far, and in wrong place
-    # Map indices across all l1c products,
-    all_dps_index_map_dict = {}
+    logger.info("Running ultra_l2 function")
+    num_dps_pointings = len(l1c_products)
+    frame_epochs = np.unique([l1c_product.epoch for l1c_product in l1c_products])
+    logger.info(f"Number of DPS Pointings: {num_dps_pointings}")
+
+    # Map indices from each l1c product to the inertial frame,
+    # both by 'pulling' from DPS -> HAE and 'pushing' from HAE -> DPS
+    all_pointings_matched_indices = {}
     for prod_num, l1c_prod in enumerate(l1c_products):
         time = float(l1c_prod.epoch.values)
         logger.info(
             f"Generating index maps for product at time index {prod_num} "
             f"with epoch {time}."
         )
+        num_az_bins_l1c = l1c_prod.azimuth_bin_center.size
+        num_el_bins_l1c = l1c_prod.elevation_bin_center.size
+        if num_az_bins_l1c != num_el_bins_l1c * 2:
+            raise ValueError(
+                "For even spacing, the number of azimuth bins must "
+                "be twice the number of elevation bins.\n"
+                f"Received: {num_az_bins_l1c} azimuth bins and "
+                f"{num_el_bins_l1c} elevation bins."
+            )
+
+        # Determine the spacing of the L1C products in degrees
+        l1c_spacing_deg = 360 / num_az_bins_l1c
+
         product_index_map_dict = {}
 
-        # First 'pull' from DPS frame to HAE
+        # First 'pull' from HAE frame to DPS
+        # (i.e. take each L2 index and find the nearest L1C PSET index.
+        # NOTE: Not guaranteed to cover all L1C PSET indices.)
         (
             indices_hae_input,
             indices_dps_proj,
@@ -474,11 +492,15 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
             input_frame=geometry.SpiceFrame.ECLIPJ2000,
             projection_frame=geometry.SpiceFrame.IMAP_DPS,
             event_time=time,
+            input_frame_spacing_deg=l2_spacing_deg,
+            projection_frame_spacing_deg=l1c_spacing_deg,
         )[:2]
         product_index_map_dict["indices_hae_input"] = indices_hae_input
         product_index_map_dict["indices_dps_proj"] = indices_dps_proj
 
         # Then 'push' from DPS frame to HAE
+        # (i.e. take each L1C PSET index and find the nearest L2 index.
+        # NOTE: Not guaranteed to cover all L2 indices.)
         (
             indices_dps_input,
             indices_hae_proj,
@@ -486,40 +508,25 @@ def ultra_l2(l1c_products: list) -> xr.Dataset:
             input_frame=geometry.SpiceFrame.IMAP_DPS,
             projection_frame=geometry.SpiceFrame.ECLIPJ2000,
             event_time=time,
+            input_frame_spacing_deg=l1c_spacing_deg,
+            projection_frame_spacing_deg=l2_spacing_deg,
         )[:2]
         product_index_map_dict["indices_hae_proj"] = indices_hae_proj
         product_index_map_dict["indices_dps_input"] = indices_dps_input
-        all_dps_index_map_dict[time] = product_index_map_dict
+        all_pointings_matched_indices[time] = product_index_map_dict
 
-    logger.info("Running ultra_l2 function")
-    num_dps_pointings = len(l1c_products)
-    logger.info(f"Number of DPS Pointings: {num_dps_pointings}")
-
-    # TODO: Replace with full Dataset creation
-    (
-        combined_counts,
-        combined_exptime_total,
-        combined_exptime_45,
-        combined_exptime_90,
-        frame_epochs,
-        energy_delta,
-        energy_bin_edges,
-        energy_midpoints,
-        solid_angle_grid,
-        developer_dict,
-    ) = build_flux_maps(l1c_products, spacing_deg=DEFAULT_SPACING_DEG)
-
-    # Rewrap the vars into grids:
-    combined_counts = spatial_utils.rewrap_even_spaced_el_az_grid(
-        combined_counts, extra_axis=True
+    # Build the combined exposure time arrays
+    (combined_exptime_45, combined_exptime_90, combined_exptime_total) = (
+        build_dps_combined_exposure_time(l1c_products, all_pointings_matched_indices)
     )
+
     combined_exptime_total = spatial_utils.rewrap_even_spaced_el_az_grid(
         combined_exptime_total, extra_axis=False
     )
 
     ds_l2 = xr.Dataset(
         {
-            "counts": (["el", "az", "energy"], combined_counts),
+            # "counts": (["el", "az", "energy"], combined_counts), # TODO: Add counts
             "exposure_time": (["el", "az"], combined_exptime_total),
         },
         attrs={"epochs": frame_epochs},
