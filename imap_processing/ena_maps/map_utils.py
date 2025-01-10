@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 # Ignore linting rule to allow for 6 unrelated args
+# Also need to manually specify allowed str literals for order parameter
 def match_rect_indices_frame_to_frame(  # noqa: PLR0913
     input_frame: geometry.SpiceFrame,
     projection_frame: geometry.SpiceFrame,
@@ -24,7 +25,7 @@ def match_rect_indices_frame_to_frame(  # noqa: PLR0913
     order: typing.Literal["C"] | typing.Literal["F"] = "F",
 ) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
-    Match flattened rectangular grid indices between two frames.
+    Match flattened rectangular grid indices between two reference frames.
 
     Parameters
     ----------
@@ -49,14 +50,28 @@ def match_rect_indices_frame_to_frame(  # noqa: PLR0913
     -------
     tuple[NDArray]
         Tuple of the following arrays:
-        - Flat indices of the grid points in the input frame.
-        - Flat indices of the grid points in the projection frame.
+        - Ordered 1D array of pixel indices covering the entire input grid.
+        Guaranteed to have one index for each point on the input grid,
+        (meaning it will cover the entire input grid).
+        Size is number of pixels on input grid
+        `= (az_grid_input.size * el_grid_input.size)`.
+        - Ordered 1D array of indices in the projection frame
+        corresponding to each index in the input grid.
+        Not guaranteed to cover the entire projection grid.
+        Size is the same as the input indices
+        = `(az_grid_input.size * el_grid_input.size)`.
         - Azimuth values of the input grid points in the input frame, raveled.
+        Same size as the input indices.
         - Elevation values of the input grid points in the input frame, raveled.
+        Same size as the input indices.
         - Azimuth values of the input grid points in the projection frame, raveled.
+        Same size as the input indices.
         - Elevation values of the input grid points in the projection frame, raveled.
+        Same size as the input indices.
         - Azimuth indices of the input grid points in the projection frame az grid.
+        Same size as the input indices.
         - Elevation indices of the input grid points in the projection frame el grid.
+        Same size as the input indices.
     """
     if input_frame_spacing_deg > projection_frame_spacing_deg:
         logger.warning(

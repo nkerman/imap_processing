@@ -1,20 +1,23 @@
 """Tests coverage for ENA Map Mapping Util functions."""
 
+from unittest import mock
+
 import numpy as np
 import pytest
-import spiceypy as spice
 
 from imap_processing.ena_maps import map_utils
 from imap_processing.spice import geometry
-from imap_processing.spice.kernels import ensure_spice
 from imap_processing.ultra.utils import spatial_utils
 
 
 class TestENAMapMappingUtils:
-    @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
-    def test_match_rect_indices_frame_to_frame_same_frame(self):
-        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
+    @mock.patch("imap_processing.ena_maps.map_utils.geometry.frame_transform")
+    def test_match_rect_indices_frame_to_frame_same_frame(self, mock_frame_transform):
+        # Mock frame transform to return the input position vectors (no transform)
+        mock_frame_transform.side_effect = (
+            lambda et, position, from_frame, to_frame: position
+        )
+        et = -1
         spacing_deg = 1
         (
             flat_indices_in,
@@ -54,13 +57,17 @@ class TestENAMapMappingUtils:
             spatial_utils.build_az_el_grid(spacing=np.deg2rad(spacing_deg))[3],
         )
 
-    @pytest.mark.external_kernel()
-    @pytest.mark.use_test_metakernel("imap_ena_sim_metakernel.template")
+    @mock.patch("imap_processing.ena_maps.map_utils.geometry.frame_transform")
     @pytest.mark.parametrize("input_spacing_deg", [1 / 4, 1 / 3, 1 / 2, 1])
     def test_match_rect_indices_frame_to_frame_different_spacings(
-        self, input_spacing_deg
+        self, mock_frame_transform, input_spacing_deg
     ):
-        et = ensure_spice(spice.utc2et)("2025-09-30T12:00:00.000")
+        # Mock frame transform to return the input position vectors (no transform)
+        mock_frame_transform.side_effect = (
+            lambda et, position, from_frame, to_frame: position
+        )
+
+        et = -1
         proj_spacing_deg = 1
 
         (
