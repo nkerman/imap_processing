@@ -47,16 +47,12 @@ def bin_single_array_at_indices(
     num_projection_indices = np.prod(projection_grid_shape)
 
     if value_array.ndim == 1:
-        extra_axis = False
-    elif value_array.ndim == 2:
-        extra_axis = True
-    else:
-        raise NotImplementedError(
-            "Only 1D and 2D arrays are supported for binning. "
-            f"Received array with shape {value_array.shape}."
+        binned_values = np.bincount(
+            projection_indices,
+            weights=value_array[input_indices],
+            minlength=num_projection_indices,
         )
-
-    if extra_axis:
+    elif value_array.ndim == 2:
         # Apply bincount to each row independently
         binned_values = np.apply_along_axis(
             lambda x: np.bincount(
@@ -67,14 +63,11 @@ def bin_single_array_at_indices(
             axis=0,
             arr=value_array,
         )
-
     else:
-        binned_values = np.bincount(
-            projection_indices,
-            weights=value_array[input_indices],
-            minlength=num_projection_indices,
+        raise NotImplementedError(
+            "Only 1D and 2D arrays are supported for binning. "
+            f"Received array with shape {value_array.shape}."
         )
-
     return binned_values
 
 
