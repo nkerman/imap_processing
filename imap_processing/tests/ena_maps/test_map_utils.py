@@ -8,6 +8,7 @@ class TestENAMapMappingUtils:
     def test_bin_single_array_at_indices(
         self,
     ):
+        """Test coverage for bin_single_array_at_indices function w/ simple 1D input"""
         value_array = np.array([1, 2, 3, 4, 5, 6])
         input_indices = np.array([0, 1, 2, 2, 1, 0])
         projection_indices = np.array([1, 2, 3, 1, 2, 3])
@@ -24,6 +25,9 @@ class TestENAMapMappingUtils:
     def test_bin_single_array_at_indices_extra_axis(
         self,
     ):
+        """Test coverage for bin_single_array_at_indices function w/ simple 2D input,
+        Corresponding to an extra axis that is not spatially binned.
+        """
         # Binning will occur along axis 0 (combining 1, 2, 3 and 4, 5, 6 separately)
         value_array = np.array(
             [
@@ -64,6 +68,10 @@ class TestENAMapMappingUtils:
     def test_bin_single_array_at_indices_complex(
         self, projection_grid_shape, input_grid_shape
     ):
+        """Test coverage for bin_single_array_at_indices function w/ complex 2D input,
+        Corresponding to an extra axis that is not spatially binned.
+        Parameterized across different input and projection grid shapes.
+        """
         np.random.seed(0)
         extra_axis_size = 11  # Another axis which is not spatially binned, e.g. energy
         input_grid_size = np.prod(input_grid_shape)
@@ -78,6 +86,15 @@ class TestENAMapMappingUtils:
             projection_grid_shape=projection_grid_shape,
         )
 
+        # Explicitly check that the shape of the output is the same as projection grid
+        np.testing.assert_equal(
+            projection_values.shape,
+            (
+                projection_grid_size,
+                extra_axis_size,
+            ),
+        )
+
         # Create the expected projection values by summing the input values in a loop
         # This is different from the binning function, which uses np.bincount
         expected_projection_values = np.zeros((projection_grid_size, extra_axis_size))
@@ -89,26 +106,56 @@ class TestENAMapMappingUtils:
     # Parameterize by the size of the projection grid,
     # which is not necessarily same size as input grid
     @pytest.mark.parametrize("projection_grid_shape", [(1, 1), (10, 10), (360, 720)])
-    def test_bin_values_at_indices_1d_collapse_to_idx_zero(self, projection_grid_shape):
-        wrapped_input_values = [
-            [0, 0, 0],
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-        ]
-        # unwrap to 0,0,0,1,2,3,4,5,6,7,8,9
-        unwrapped_input_values = np.ravel(wrapped_input_values, order="C")
-        scale_factor = 1.5
+    def test_bin_values_at_indices_collapse_to_idx_zero(self, projection_grid_shape):
+        """Test coverage for bin_values_at_indices function w/ dict of multiple
+        1D input value arrays and a single 2D input value array.
+        All input values are binned to the first index of the projection grid.
+        Parameterized across different projection grid shapes.
+        """
+        # 1D input values (2nd will be scalar multiple of 1st)
+        input_values_1d_1 = np.array([0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        scale_factor_1d = 1.5
+        input_values_1d_2 = input_values_1d_1 * scale_factor_1d
+
+        # 2D input values. The second axis (different cols) will be summed independently
+        input_values_2d = np.array(
+            [
+                [-0.5, 0, 0.5],
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+            ]
+        )
+        extra_axis_size = input_values_2d.shape[1]
+
+        # Set up the expected projection values
+        expected_projection_values_1d_1 = np.zeros(projection_grid_shape).ravel()
+        expected_projection_values_1d_1[0] = np.sum(input_values_1d_1)
+        expected_projection_values_1d_2 = (
+            expected_projection_values_1d_1 * scale_factor_1d
+        )
+        expected_projection_values_2d = np.zeros(
+            (np.prod(projection_grid_shape), extra_axis_size)
+        )
+        expected_projection_values_2d[0, :] = np.array([11.5, 15, 18.5])
+
         input_values_to_bin = {
-            "sum_variable_1": unwrapped_input_values,
-            "sum_variable_2": unwrapped_input_values * scale_factor,
+            "sum_variable_1d_1": input_values_1d_1,
+            "sum_variable_1d_2": input_values_1d_2,
+            "sum_variable_2d": np.array(input_values_2d),
         }
 
-        input_indices = np.arange(len(unwrapped_input_values))
+        # Set up indices
+        input_indices = np.arange(len(input_values_1d_1))
         projection_indices = np.zeros_like(input_indices)
-        expected_projection_values_1 = np.zeros(projection_grid_shape).ravel()
-        expected_projection_values_1[0] = np.sum(unwrapped_input_values)
-        expected_projection_values_2 = expected_projection_values_1 * scale_factor
 
         output_dict = map_utils.bin_values_at_indices(
             input_values_to_bin,
@@ -118,13 +165,18 @@ class TestENAMapMappingUtils:
         )
 
         np.testing.assert_equal(
-            output_dict["sum_variable_1"], expected_projection_values_1
+            output_dict["sum_variable_1d_1"], expected_projection_values_1d_1
         )
         np.testing.assert_equal(
-            output_dict["sum_variable_2"], expected_projection_values_2
+            output_dict["sum_variable_1d_2"], expected_projection_values_1d_2
+        )
+        np.testing.assert_equal(
+            output_dict["sum_variable_2d"], expected_projection_values_2d
         )
 
     def test_bin_single_array_at_indices_3d_values_raises(self):
+        """3D arrays are not currently supported for binning.
+        Test that NotImplementedError is raised."""
         value_array = np.ones((2, 2, 2))
         input_indices = np.array([0, 1])
         projection_indices = np.array([0, 1])
@@ -145,6 +197,8 @@ class TestENAMapMappingUtils:
             )
 
     def test_bin_values_at_indices_2d_indices_raises(self):
+        """2D indices are not supported for binning.
+        Test that ValueError is raised."""
         input_values = {"test": np.array([1, 2, 3])}
         input_indices = np.array([[0, 1], [1, 2]])
         projection_indices = np.array([0, 1, 2])
@@ -165,6 +219,8 @@ class TestENAMapMappingUtils:
             )
 
     def test_bin_values_at_indices_mismatched_sizes_raises(self):
+        """Mismatched input and projection indices should raise an error.
+        Test that ValueError is raised."""
         input_values = {"test": np.array([1, 2, 3])}
         input_indices = np.array([0, 1, 0, 1])
         projection_indices = np.array([0, 1, 2])

@@ -109,7 +109,8 @@ def bin_values_at_indices(
         on the projection grid.
 
     ValueError
-        If the input indices are not 1D arrays with the same number of elements.
+        If the input and projection indices are not 1D arrays
+        with the same number of elements.
     """
     # Both sets of indices must be 1D with the same number of elements
     if input_indices.ndim != 1 or projection_indices.ndim != 1:
