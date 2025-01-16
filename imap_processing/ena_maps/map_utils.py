@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 def bin_single_array_at_indices(
     value_array: NDArray,
-    input_indices: NDArray,
-    projection_indices: NDArray,
     projection_grid_shape: tuple[int, int],
+    projection_indices: NDArray,
+    input_indices: NDArray | None = None,
 ) -> NDArray:
     """
     Bin an array of values at the given indices.
@@ -22,17 +22,21 @@ def bin_single_array_at_indices(
     Parameters
     ----------
     value_array : NDArray
-        Array of values to bin.
-    input_indices : NDArray
-        Ordered indices for input grid, corresponding to indices in projection grid.
-        1 dimensional. May be non-unique, depending on the projection method.
-    projection_indices : NDArray
-        Ordered indices for projection grid, corresponding to indices in input grid.
-        1 dimensional. May be non-unique, depending on the projection method.
+        Array of values to bin. The 0th axis must be the one and only spatial axis.
+        If other axes are present, they will be binned independently
+        along the 0th (spatial) axis.
     projection_grid_shape : tuple[int]
         The shape of the grid onto which values are projected
         (rows, columns) if the grid is rectangular,
         or just (number of bins,) if the grid is 1D.
+    projection_indices : NDArray
+        Ordered indices for projection grid, corresponding to indices in input grid.
+        1 dimensional. May be non-unique, depending on the projection method.
+    input_indices : NDArray
+        Ordered indices for input grid, corresponding to indices in projection grid.
+        1 dimensional. May be non-unique, depending on the projection method.
+        If None (default), an arange of the same length as the
+        0th axis of value_array is used.
 
     Returns
     -------
@@ -44,6 +48,9 @@ def bin_single_array_at_indices(
     NotImplementedError
         If the input value_array has more than 2 dimensions.
     """
+    if input_indices is None:
+        input_indices = np.arange(value_array.shape[0])
+
     num_projection_indices = np.prod(projection_grid_shape)
 
     if value_array.ndim == 1:
@@ -52,12 +59,12 @@ def bin_single_array_at_indices(
             weights=value_array[input_indices],
             minlength=num_projection_indices,
         )
-    elif value_array.ndim == 2:
+    elif value_array.ndim >= 2:
         # Apply bincount to each row independently
         binned_values = np.apply_along_axis(
             lambda x: np.bincount(
                 projection_indices,
-                weights=x[input_indices],
+                weights=x[input_indices, ...],
                 minlength=num_projection_indices,
             ),
             axis=0,
@@ -65,7 +72,7 @@ def bin_single_array_at_indices(
         )
     else:
         raise NotImplementedError(
-            "Only 1D and 2D arrays are supported for binning. "
+            "Only 1+ Dimensional arrays are supported for binning. "
             f"Received array with shape {value_array.shape}."
         )
     return binned_values
@@ -73,9 +80,9 @@ def bin_single_array_at_indices(
 
 def bin_values_at_indices(
     input_values_to_bin: dict[str, NDArray],
-    input_indices: NDArray,
-    projection_indices: NDArray,
     projection_grid_shape: tuple[int, int],
+    projection_indices: NDArray,
+    input_indices: NDArray | None = None,
 ) -> dict[str, NDArray]:
     """
     Project values from input grid to projection grid based on matched indices.
@@ -84,16 +91,20 @@ def bin_values_at_indices(
     ----------
     input_values_to_bin : dict[str, NDArray]
         Dict matching variable names to arrays of values to bin.
-    input_indices : NDArray
-        Ordered indices for input grid, corresponding to indices in projection grid.
-        1 dimensional. May be non-unique, depending on the projection method.
-    projection_indices : NDArray
-        Ordered indices for projection grid, corresponding to indices in input grid.
-        1 dimensional. May be non-unique, depending on the projection method.
+        The 0th axis of each array must be the one and only spatial axis,
+        which the indices correspond to and on which the values will be binned.
+        The other axes will be binned independently along this 0th axis.
     projection_grid_shape : tuple[int, int]
         The shape of the grid onto which values are projected (rows, columns).
         This size of the resulting grid (rows * columns) will be the size of the
         projected values contained in the output dictionary.
+    projection_indices : NDArray
+        Ordered indices for projection grid, corresponding to indices in input grid.
+        1 dimensional. May be non-unique, depending on the projection method.
+    input_indices : NDArray
+        Ordered indices for input grid, corresponding to indices in projection grid.
+        1 dimensional. May be non-unique, depending on the projection method.
+        If None (default), behavior is determined by bin_single_array_at_indices.
 
     Returns
     -------
@@ -122,7 +133,10 @@ def bin_values_at_indices(
     for value_name, value_array in input_values_to_bin.items():
         logger.info(f"Binning {value_name}")
         binned_values_dict[value_name] = bin_single_array_at_indices(
-            value_array, input_indices, projection_indices, projection_grid_shape
+            value_array=value_array,
+            projection_grid_shape=projection_grid_shape,
+            projection_indices=projection_indices,
+            input_indices=input_indices,
         )
 
     return binned_values_dict
