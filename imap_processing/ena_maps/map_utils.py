@@ -45,11 +45,27 @@ def bin_single_array_at_indices(
 
     Raises
     ------
+    ValueError
+        If the input and projection indices are not 1D arrays
+        with the same number of elements.
     NotImplementedError
-        If the input value_array has more than 2 dimensions.
+        If the input value_array has dimensionality less than 1.
     """
     if input_indices is None:
         input_indices = np.arange(value_array.shape[0])
+
+    # Both sets of indices must be 1D with the same number of elements
+    if input_indices.ndim != 1 or projection_indices.ndim != 1:
+        raise ValueError(
+            "Indices must be 1D arrays. "
+            "If using a rectangular grid, the indices must be unwrapped."
+        )
+    if input_indices.size != projection_indices.size:
+        raise ValueError(
+            "The number of input and projection indices must be the same. \n"
+            f"Received {input_indices.size} input indices and {projection_indices.size}"
+            " projection indices."
+        )
 
     num_projection_indices = np.prod(projection_grid_shape)
 
@@ -116,19 +132,6 @@ def bin_values_at_indices(
         If the input and projection indices are not 1D arrays
         with the same number of elements.
     """
-    # Both sets of indices must be 1D with the same number of elements
-    if input_indices.ndim != 1 or projection_indices.ndim != 1:
-        raise ValueError(
-            "Indices must be 1D arrays. "
-            "If using a rectangular grid, the indices must be unwrapped."
-        )
-    if input_indices.size != projection_indices.size:
-        raise ValueError(
-            "The number of input and projection indices must be the same. \n"
-            f"Received {input_indices.size} input indices and {projection_indices.size}"
-            " projection indices."
-        )
-
     binned_values_dict = {}
     for value_name, value_array in input_values_to_bin.items():
         logger.info(f"Binning {value_name}")

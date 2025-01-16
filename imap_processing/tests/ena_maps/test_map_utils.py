@@ -247,7 +247,7 @@ class TestENAMapMappingUtils:
     def test_bin_values_at_indices_2d_indices_raises(self):
         """2D indices are not supported for binning.
         Test that ValueError is raised."""
-        input_values = {"test": np.array([1, 2, 3])}
+        input_values = np.array([1, 2, 3])
         input_indices = np.array([[0, 1], [1, 2]])
         projection_indices = np.array([0, 1, 2])
         projection_grid_shape = (3,)
@@ -259,7 +259,7 @@ class TestENAMapMappingUtils:
                 "the indices must be unwrapped."
             ),
         ):
-            map_utils.bin_values_at_indices(
+            map_utils.bin_single_array_at_indices(
                 input_values,
                 input_indices=input_indices,
                 projection_indices=projection_indices,
@@ -269,7 +269,7 @@ class TestENAMapMappingUtils:
     def test_bin_values_at_indices_mismatched_sizes_raises(self):
         """Mismatched input and projection indices should raise an error.
         Test that ValueError is raised."""
-        input_values = {"test": np.array([1, 2, 3])}
+        input_values = np.array([1, 2, 3])
         input_indices = np.array([0, 1, 0, 1])
         projection_indices = np.array([0, 1, 2])
         projection_grid_shape = (3,)
@@ -278,7 +278,7 @@ class TestENAMapMappingUtils:
             ValueError,
             match=("The number of input and projection indices must be the same"),
         ):
-            map_utils.bin_values_at_indices(
+            map_utils.bin_single_array_at_indices(
                 input_values,
                 input_indices=input_indices,
                 projection_indices=projection_indices,
