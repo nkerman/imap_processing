@@ -95,9 +95,9 @@ def build_az_el_grid(
     output_degrees: bool = False,
     centered_azimuth: bool = False,
     centered_elevation: bool = True,
-) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
-    Build a 2D grid of azimuth and elevation angles.
+    Build a 2D grid of azimuth and elevation angles, and their 1D bin edges.
 
     Azimuth and Elevation values represent the center of each grid cell,
     so the grid is offset by half the spacing.
@@ -123,15 +123,21 @@ def build_az_el_grid(
 
     Returns
     -------
-    tuple[NDArray, NDArray, NDArray, NDArray]
+    tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]
         - The evenly spaced, 1D range of azimuth angles
-        e.g.(0, 0.5, 1, ..., 359.5) deg.
+        e.g.(0.5, 1, ..., 359.5) deg.
         - The evenly spaced, 1D range of elevation angles
-        e.g.(-90, -89.5, ..., 89.5) deg.
+        e.g.(-89.5, ..., 89.5) deg.
         - The 2D grid of azimuth angles (azimuths for each elevation).
         This grid will be constant along the elevation (0th) axis.
         - The 2D grid of elevation angles (elevations for each azimuth).
         This grid will be constant along the azimuth (1st) axis.
+        - The 1D bin edges for azimuth angles.
+        e.g. if spacing=1 deg:
+        az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
+        - The 1D bin edges for elevation angles.
+        e.g. if spacing=1 deg:
+        el_bin_edges = [-90, -89, -88, ..., 89, 90] deg.
 
     Raises
     ------
@@ -147,6 +153,14 @@ def build_az_el_grid(
     if not np.isclose((np.pi / spacing) % 1, 0):
         raise ValueError("Spacing must divide evenly into pi radians.")
 
+    # Create the bin edges for azimuth and elevation.
+    # E.g. for spacing=1, az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
+    el_bin_edges = np.linspace(-np.pi / 2, np.pi / 2, int(np.pi / spacing) + 1)
+    az_bin_edges = np.linspace(0, 2 * np.pi, int(2 * np.pi / spacing) + 1)
+
+    # Create the 2D grid of azimuth and elevation angles at center of each bin.
+    # These ranges are offset by half the spacing and are
+    # one element shorter than the bin edges.
     el_range = np.arange(spacing / 2, np.pi, spacing)
     az_range = np.arange(spacing / 2, 2 * np.pi, spacing)
     if centered_azimuth:
@@ -165,8 +179,10 @@ def build_az_el_grid(
         el_range = np.rad2deg(el_range)
         az_grid = np.rad2deg(az_grid)
         el_grid = np.rad2deg(el_grid)
+        az_bin_edges = np.rad2deg(az_bin_edges)
+        el_bin_edges = np.rad2deg(el_bin_edges)
 
-    return az_range, el_range, az_grid, el_grid
+    return az_range, el_range, az_grid, el_grid, az_bin_edges, el_bin_edges
 
 
 @typing.no_type_check
