@@ -1,5 +1,7 @@
 """IMAP utils for spatial binning and az/el grid creation."""
 
+from __future__ import annotations
+
 import typing
 
 import numpy as np
@@ -200,7 +202,7 @@ def build_az_el_grid(  # noqa: PLR0913
 @typing.no_type_check
 def rewrap_even_spaced_el_az_grid(
     raveled_values: NDArray,
-    shape: typing.Optional[tuple[int]] = None,
+    shape: tuple[int] | None = None,
     extra_axis: bool = False,
     order: typing.Literal["C"] | typing.Literal["F"] = "F",
 ) -> NDArray:
