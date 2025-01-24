@@ -6,6 +6,7 @@ import cdflib
 import numpy as np
 from numpy.typing import NDArray
 
+from imap_processing.ena_maps.utils.spatial_utils import build_spatial_bins
 from imap_processing.spice.geometry import (
     SpiceFrame,
     cartesian_to_spherical,
@@ -13,7 +14,6 @@ from imap_processing.spice.geometry import (
     spherical_to_cartesian,
 )
 from imap_processing.ultra.constants import UltraConstants
-from imap_processing.ultra.utils.spatial_utils import build_spatial_bins
 
 # TODO: add species binning.
 
