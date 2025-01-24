@@ -4,7 +4,7 @@ import numpy as np
 import numpy.testing as npt
 import pytest
 
-from imap_processing.ena_maps import spatial_utils
+from imap_processing.ena_maps.utils import spatial_utils
 
 # Parameterize with spacings (degrees here):
 valid_spacings = [0.1, 0.25, 0.5, 1, 5, 10, 20]
