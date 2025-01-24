@@ -1,4 +1,4 @@
-"""IMAP Ultra utils for spatial binning and grid creation."""
+"""IMAP utils for spatial binning and az/el grid creation."""
 
 import typing
 
