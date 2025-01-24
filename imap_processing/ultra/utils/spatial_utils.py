@@ -79,8 +79,9 @@ def build_solid_angle_map(
     delta_sine_latitudes = np.diff(sine_latitudes)
     solid_angle_by_latitude = np.abs(spacing * delta_sine_latitudes)
 
+    # Order ensures agreement with build_az_el_grid's order of tiling az/el grid.
     solid_angle_grid = np.repeat(
-        solid_angle_by_latitude[:, np.newaxis], (2 * np.pi) / spacing, axis=1
+        solid_angle_by_latitude[np.newaxis, :], (2 * np.pi) / spacing, axis=0
     )
 
     if output_degrees:
@@ -89,15 +90,17 @@ def build_solid_angle_map(
     return solid_angle_grid
 
 
-def build_az_el_grid(
+# Ignore linting rule to allow for 6 unrelated args
+def build_az_el_grid(  # noqa: PLR0913
     spacing: float,
     input_degrees: bool = False,
     output_degrees: bool = False,
     centered_azimuth: bool = False,
     centered_elevation: bool = True,
-) -> tuple[NDArray, NDArray, NDArray, NDArray]:
+    reversed_elevation: bool = False,
+) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
     """
-    Build a 2D grid of azimuth and elevation angles.
+    Build a 2D grid of azimuth and elevation angles, and their 1D bin edges.
 
     Azimuth and Elevation values represent the center of each grid cell,
     so the grid is offset by half the spacing.
@@ -120,18 +123,28 @@ def build_az_el_grid(
         Whether the elevation grid should be centered around 0 degrees/0 radians,
         i.e. from -pi/2 to pi/2 radians, by default True.
         If False, the elevation grid will be from 0 to pi radians.
+    reversed_elevation : bool, optional
+        Whether the elevation grid should be reversed, by default False.
+        If False, the elevation grid will be from -pi/2 to pi/2 radians (-90 to 90 deg).
+        If True, the elevation grid will be from pi/2 to -pi/2 radians (90 to -90 deg).
 
     Returns
     -------
-    tuple[NDArray, NDArray, NDArray, NDArray]
+    tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]
         - The evenly spaced, 1D range of azimuth angles
-        e.g.(0, 0.5, 1, ..., 359.5) deg.
+        e.g.(0.5, 1, ..., 359.5) deg.
         - The evenly spaced, 1D range of elevation angles
-        e.g.(-90, -89.5, ..., 89.5) deg.
+        e.g.(-89.5, ..., 89.5) deg.
         - The 2D grid of azimuth angles (azimuths for each elevation).
         This grid will be constant along the elevation (0th) axis.
         - The 2D grid of elevation angles (elevations for each azimuth).
         This grid will be constant along the azimuth (1st) axis.
+        - The 1D bin edges for azimuth angles.
+        e.g. if spacing=1 deg:
+        az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
+        - The 1D bin edges for elevation angles.
+        e.g. if spacing=1 deg:
+        el_bin_edges = [-90, -89, -88, ..., 89, 90] deg.
 
     Raises
     ------
@@ -147,6 +160,14 @@ def build_az_el_grid(
     if not np.isclose((np.pi / spacing) % 1, 0):
         raise ValueError("Spacing must divide evenly into pi radians.")
 
+    # Create the bin edges for azimuth and elevation.
+    # E.g. for spacing=1, az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
+    el_bin_edges = np.linspace(-np.pi / 2, np.pi / 2, int(np.pi / spacing) + 1)
+    az_bin_edges = np.linspace(0, 2 * np.pi, int(2 * np.pi / spacing) + 1)
+
+    # Create the 2D grid of azimuth and elevation angles at center of each bin.
+    # These ranges are offset by half the spacing and are
+    # one element shorter than the bin edges.
     el_range = np.arange(spacing / 2, np.pi, spacing)
     az_range = np.arange(spacing / 2, 2 * np.pi, spacing)
     if centered_azimuth:
@@ -156,17 +177,24 @@ def build_az_el_grid(
 
     # Reverse the elevation range so that the grid is in the order
     # defined by the Ultra prototype code (`build_dps_grid.m`).
-    el_range = el_range[::-1]
+    if reversed_elevation:
+        el_range = el_range[::-1]
+        el_bin_edges = el_bin_edges[::-1]
 
-    az_grid, el_grid = np.meshgrid(az_range, el_range)
+    # Deriving our az/el grids with indexing "ij" allows for
+    # ravel_multi_index to work correctly with 1D digitized indices in each az and el,
+    # using the same ravel order ('C' or 'F') as the grid points were unwrapped.
+    az_grid, el_grid = np.meshgrid(az_range, el_range, indexing="ij")
 
     if output_degrees:
         az_range = np.rad2deg(az_range)
         el_range = np.rad2deg(el_range)
         az_grid = np.rad2deg(az_grid)
         el_grid = np.rad2deg(el_grid)
+        az_bin_edges = np.rad2deg(az_bin_edges)
+        el_bin_edges = np.rad2deg(el_bin_edges)
 
-    return az_range, el_range, az_grid, el_grid
+    return az_range, el_range, az_grid, el_grid, az_bin_edges, el_bin_edges
 
 
 @typing.no_type_check
@@ -174,6 +202,7 @@ def rewrap_even_spaced_el_az_grid(
     raveled_values: NDArray,
     shape: typing.Optional[tuple[int]] = None,
     extra_axis: bool = False,
+    order: typing.Literal["C"] | typing.Literal["F"] = "F",
 ) -> NDArray:
     """
     Take an unwrapped (raveled) 1D array and reshapes it into a 2D el/az grid.
@@ -183,7 +212,6 @@ def rewrap_even_spaced_el_az_grid(
     2. Grid had the same spacing in both azimuth and elevation.
     3. Elevation is the 0th axis (and extends a total of 180 degrees),
     4. Azimuth is the 1st axis (and extends a total of 360 degrees).
-    5. The grid was raveled in Fortran (F) order.
 
     Parameters
     ----------
@@ -195,6 +223,8 @@ def rewrap_even_spaced_el_az_grid(
     extra_axis : bool, optional
         If True, input is a 2D array with latter axis being 'extra', non-spatial axis.
         This axis (e.g. energy bins) will be preserved in the reshaped grid.
+    order : {'C', 'F'}, optional
+        The order in which to rewrap the values, by default 'F' for Fortran order.
 
     Returns
     -------
@@ -218,4 +248,4 @@ def rewrap_even_spaced_el_az_grid(
 
     if extra_axis:
         shape = (shape[0], shape[1], raveled_values.shape[1])
-    return raveled_values.reshape(shape, order="F")
+    return raveled_values.reshape(shape, order=order)
