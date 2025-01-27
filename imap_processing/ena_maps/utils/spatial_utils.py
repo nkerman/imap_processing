@@ -92,113 +92,6 @@ def build_solid_angle_map(
     return solid_angle_grid
 
 
-# Ignore linting rule to allow for 6 unrelated args
-def build_az_el_grid(  # noqa: PLR0913
-    spacing: float,
-    input_degrees: bool = False,
-    output_degrees: bool = False,
-    centered_azimuth: bool = False,
-    centered_elevation: bool = True,
-    reversed_elevation: bool = False,
-) -> tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]:
-    """
-    Build a 2D grid of azimuth and elevation angles, and their 1D bin edges.
-
-    Azimuth and Elevation values represent the center of each grid cell,
-    so the grid is offset by half the spacing.
-
-    Parameters
-    ----------
-    spacing : float
-        Spacing of the grid in degrees if `input_degrees` is True, else radians.
-    input_degrees : bool, optional
-        Whether the spacing is specified in degrees and must be converted to radians,
-        by default False (indicating radians).
-    output_degrees : bool, optional
-        Whether the output azimuth and elevation angles should be in degrees,
-        by default False (indicating radians).
-    centered_azimuth : bool, optional
-        Whether the azimuth grid should be centered around 0 degrees/0 radians,
-        i.e. from -pi to pi radians, by default False, indicating 0 to 2pi radians.
-        If True, the azimuth grid will be from -pi to pi radians.
-    centered_elevation : bool, optional
-        Whether the elevation grid should be centered around 0 degrees/0 radians,
-        i.e. from -pi/2 to pi/2 radians, by default True.
-        If False, the elevation grid will be from 0 to pi radians.
-    reversed_elevation : bool, optional
-        Whether the elevation grid should be reversed, by default False.
-        If False, the elevation grid will be from -pi/2 to pi/2 radians (-90 to 90 deg).
-        If True, the elevation grid will be from pi/2 to -pi/2 radians (90 to -90 deg).
-
-    Returns
-    -------
-    tuple[NDArray, NDArray, NDArray, NDArray, NDArray, NDArray]
-        - The evenly spaced, 1D range of azimuth angles
-        e.g.(0.5, 1, ..., 359.5) deg.
-        - The evenly spaced, 1D range of elevation angles
-        e.g.(-89.5, ..., 89.5) deg.
-        - The 2D grid of azimuth angles (azimuths for each elevation).
-        This grid will be constant along the elevation (0th) axis.
-        - The 2D grid of elevation angles (elevations for each azimuth).
-        This grid will be constant along the azimuth (1st) axis.
-        - The 1D bin edges for azimuth angles.
-        e.g. if spacing=1 deg:
-        az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
-        - The 1D bin edges for elevation angles.
-        e.g. if spacing=1 deg:
-        el_bin_edges = [-90, -89, -88, ..., 89, 90] deg.
-
-    Raises
-    ------
-    ValueError
-        If the spacing is not positive or does not divide evenly into pi radians.
-    """
-    if input_degrees:
-        spacing = np.deg2rad(spacing)
-
-    if spacing <= 0:
-        raise ValueError("Spacing must be positive valued, non-zero.")
-
-    if not np.isclose((np.pi / spacing) % 1, 0):
-        raise ValueError("Spacing must divide evenly into pi radians.")
-
-    # Create the bin edges for azimuth and elevation.
-    # E.g. for spacing=1, az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
-    el_bin_edges = np.linspace(-np.pi / 2, np.pi / 2, int(np.pi / spacing) + 1)
-    az_bin_edges = np.linspace(0, 2 * np.pi, int(2 * np.pi / spacing) + 1)
-
-    # Create the 2D grid of azimuth and elevation angles at center of each bin.
-    # These ranges are offset by half the spacing and are
-    # one element shorter than the bin edges.
-    el_range = np.arange(spacing / 2, np.pi, spacing)
-    az_range = np.arange(spacing / 2, 2 * np.pi, spacing)
-    if centered_azimuth:
-        az_range = az_range - np.pi
-    if centered_elevation:
-        el_range = el_range - np.pi / 2
-
-    # Reverse the elevation range so that the grid is in the order
-    # defined by the Ultra prototype code (`build_dps_grid.m`).
-    if reversed_elevation:
-        el_range = el_range[::-1]
-        el_bin_edges = el_bin_edges[::-1]
-
-    # Deriving our az/el grids with indexing "ij" allows for
-    # ravel_multi_index to work correctly with 1D digitized indices in each az and el,
-    # using the same ravel order ('C' or 'F') as the grid points were unwrapped.
-    az_grid, el_grid = np.meshgrid(az_range, el_range, indexing="ij")
-
-    if output_degrees:
-        az_range = np.rad2deg(az_range)
-        el_range = np.rad2deg(el_range)
-        az_grid = np.rad2deg(az_grid)
-        el_grid = np.rad2deg(el_grid)
-        az_bin_edges = np.rad2deg(az_bin_edges)
-        el_bin_edges = np.rad2deg(el_bin_edges)
-
-    return az_range, el_range, az_grid, el_grid, az_bin_edges, el_bin_edges
-
-
 @typing.no_type_check
 def rewrap_even_spaced_el_az_grid(
     raveled_values: NDArray,
@@ -251,3 +144,143 @@ def rewrap_even_spaced_el_az_grid(
     if extra_axis:
         shape = (shape[0], shape[1], raveled_values.shape[1])
     return raveled_values.reshape(shape, order=order)
+
+
+class AzElSkyGrid:
+    """
+    Representation of a 2D grid of azimuth and elevation angles covering the sky.
+
+    Parameters
+    ----------
+    spacing_deg : float, optional
+        Spacing of the grid in degrees, by default 0.5.
+    centered_azimuth : bool, optional
+        Whether the azimuth grid should be centered around 0 degrees/0 radians,
+        i.e. from -pi to pi radians, by default False.
+        If True, the azimuth grid will be from -pi to pi radians.
+    centered_elevation : bool, optional
+        Whether the elevation grid should be centered around 0 degrees/0 radians,
+        i.e. from -pi/2 to pi/2 radians, by default True.
+        If False, the elevation grid will be from 0 to pi radians.
+    reversed_elevation : bool, optional
+        Whether the elevation grid should be reversed, by default False.
+        If False, the elevation grid will be from -pi/2 to pi/2 radians (-90 to 90 deg).
+        If True, the elevation grid will be from pi/2 to -pi/2 radians (90 to -90 deg).
+    angular_units : {'deg', 'rad'}, optional
+        The angular units of the grid's values. By default 'deg'.
+        If 'deg', the grid will be in degrees, if 'rad', the grid will be in radians.
+    """
+
+    def __init__(  # noqa: PLR0913
+        self,
+        spacing_deg: float = 0.5,
+        centered_azimuth: bool = False,
+        centered_elevation: bool = True,
+        reversed_elevation: bool = False,
+        angular_units: typing.Literal["deg"] | typing.Literal["rad"] = "deg",
+    ) -> None:
+        if angular_units not in ("deg", "rad"):
+            raise ValueError("angular_units must be 'deg' or 'rad'.")
+
+        # Store grid properties
+        self.angular_units = angular_units
+        self.centered_azimuth = centered_azimuth
+        self.centered_elevation = centered_elevation
+        self.reversed_elevation = reversed_elevation
+
+        # Internally, work in radians, regardless of desired output units
+        # If angular_units == deg, conversion will be done at the end
+        self.spacing_radians = np.deg2rad(spacing_deg)
+
+        # Ensure valid grid spacing (positive, divides evenly into pi radians)
+        if self.spacing_radians <= 0:
+            raise ValueError("Spacing must be positive valued, non-zero.")
+
+        if not np.isclose((np.pi / self.spacing_radians) % 1, 0):
+            raise ValueError("Spacing must divide evenly into pi radians.")
+
+        # Create the bin edges for azimuth and elevation.
+        # E.g. for spacing=1, az_bin_edges = [0, 1, 2, ..., 359, 360] deg.
+        self.az_bin_edges = np.linspace(
+            0, 2 * np.pi, int(2 * np.pi / self.spacing_radians) + 1
+        )
+        self.el_bin_edges = np.linspace(  # [-90, -89, ..., 89, 90] deg.
+            -np.pi / 2, np.pi / 2, int(np.pi / self.spacing_radians) + 1
+        )
+
+        # Create the 2D grid of azimuth and elevation angles at center of each bin.
+        # These ranges are offset by half the spacing and are
+        # one element shorter than the bin edges.
+        self.az_range = np.arange(  # [0.5, 1.5, ..., 359.5] deg.
+            self.spacing_radians / 2, 2 * np.pi, self.spacing_radians
+        )
+        self.el_range = np.arange(  # [-89.5, ..., 89.5] deg.
+            self.spacing_radians / 2, np.pi, self.spacing_radians
+        )
+        if centered_azimuth:
+            self.az_range = self.az_range - np.pi
+        if centered_elevation:
+            self.el_range = self.el_range - np.pi / 2
+
+        # If desired, reverse the elevation range so that the grid is in the order
+        # defined by the Ultra prototype code (`build_dps_grid.m`).
+        if self.reversed_elevation:
+            self.el_range = self.el_range[::-1]
+            self.el_bin_edges = self.el_bin_edges[::-1]
+
+        # Deriving our az/el grids with indexing "ij" allows for ravel_multi_index
+        # to work correctly with 1D digitized indices in each az and el,
+        # using the same ravel order ('C' or 'F') as the grid points were unwrapped.
+        self.az_grid, self.el_grid = np.meshgrid(
+            self.az_range, self.el_range, indexing="ij"
+        )
+
+        # Keep track of number of points on the grid
+        self.grid_shape = self.az_grid.shape
+        self.grid_size = self.az_grid.size
+
+        if angular_units == "deg":
+            self.az_range = np.rad2deg(self.az_range)
+            self.el_range = np.rad2deg(self.el_range)
+            self.az_grid = np.rad2deg(self.az_grid)
+            self.el_grid = np.rad2deg(self.el_grid)
+            self.az_bin_edges = np.rad2deg(self.az_bin_edges)
+            self.el_bin_edges = np.rad2deg(self.el_bin_edges)
+
+    def to_degrees(self) -> None:
+        """Change the angular units of the grid to degrees."""
+        if self.angular_units == "deg":
+            return
+        self.az_range = np.rad2deg(self.az_range)
+        self.el_range = np.rad2deg(self.el_range)
+        self.az_grid = np.rad2deg(self.az_grid)
+        self.el_grid = np.rad2deg(self.el_grid)
+        self.az_bin_edges = np.rad2deg(self.az_bin_edges)
+        self.el_bin_edges = np.rad2deg(self.el_bin_edges)
+        self.angular_units = "deg"
+
+    def to_radians(self) -> None:
+        """Change the angular units of the grid to radians."""
+        if self.angular_units == "rad":
+            return
+        self.az_range = np.deg2rad(self.az_range)
+        self.el_range = np.deg2rad(self.el_range)
+        self.az_grid = np.deg2rad(self.az_grid)
+        self.el_grid = np.deg2rad(self.el_grid)
+        self.az_bin_edges = np.deg2rad(self.az_bin_edges)
+        self.el_bin_edges = np.deg2rad(self.el_bin_edges)
+        self.angular_units = "rad"
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the AzElSkyGrid.
+
+        Returns
+        -------
+        str
+            A string representation of the AzElSkyGrid.
+        """
+        return (
+            f"AzElSkyGrid with a spacing of {self.spacing_radians} rad = "
+            f"{np.rad2deg(self.spacing_radians)} deg. {self.grid_shape} Grid."
+        )

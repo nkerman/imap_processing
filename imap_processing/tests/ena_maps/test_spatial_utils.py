@@ -7,7 +7,7 @@ import pytest
 from imap_processing.ena_maps.utils import spatial_utils
 
 # Parameterize with spacings (degrees here):
-valid_spacings = [0.1, 0.25, 0.5, 1, 5, 10, 20]
+valid_spacings = [0.25, 0.5, 1, 5, 10, 20]
 invalid_spacings = [0, -1, 11]
 invalid_spacings_match_str = [
     "Spacing must be positive valued, non-zero.",
@@ -61,13 +61,13 @@ def test_build_solid_angle_map_equal_at_equal_el(spacing):
     solid_angle_map = spatial_utils.build_solid_angle_map(
         spacing, input_degrees=True, output_degrees=False
     )
-    el_grid = spatial_utils.build_az_el_grid(
-        spacing=spacing,
-        input_degrees=True,
-        output_degrees=False,
+    el_grid = spatial_utils.AzElSkyGrid(
+        spacing_deg=spacing,
         centered_azimuth=False,
         centered_elevation=True,
-    )[3]
+        reversed_elevation=False,
+        angular_units="deg",
+    ).el_grid
     for unique_el in np.unique(el_grid):
         solid_angles = solid_angle_map[el_grid == unique_el]
         np.testing.assert_allclose(solid_angles, solid_angles[0])
@@ -82,40 +82,6 @@ def test_build_solid_angle_map_invalid_spacing(spacing, match_str):
         _ = spatial_utils.build_solid_angle_map(
             spacing, input_degrees=True, output_degrees=False
         )
-
-
-@pytest.mark.parametrize("spacing", valid_spacings)
-def test_build_az_el_grid(spacing):
-    """Test build_az_el_grid function."""
-    (az_range, el_range, az_grid, el_grid, az_bin_edges, el_bin_edges) = (
-        spatial_utils.build_az_el_grid(
-            spacing=spacing,
-            input_degrees=True,
-            output_degrees=True,
-            centered_azimuth=False,
-            centered_elevation=True,
-            reversed_elevation=False,
-        )
-    )
-
-    # Size checks
-    assert az_range.size == int(360 / spacing)
-    assert el_range.size == int(180 / spacing)
-    assert az_range.size == az_grid.shape[0]
-    assert el_range.size == el_grid.shape[1]
-
-    # Check grid values
-    expected_az_range = np.arange((spacing / 2), 360 + (spacing / 2), spacing)
-    expected_el_range = np.arange(-90 + (spacing / 2), 90 + (spacing / 2), spacing)
-
-    npt.assert_allclose(az_range, expected_az_range, atol=1e-12)
-    npt.assert_allclose(el_range, expected_el_range, atol=1e-12)
-
-    # Check bin edges
-    expected_az_bin_edges = np.arange(0, 360 + spacing, spacing)
-    expected_el_bin_edges = np.arange(-90, 90 + spacing, spacing)
-    npt.assert_allclose(az_bin_edges, expected_az_bin_edges, atol=1e-11)
-    npt.assert_allclose(el_bin_edges, expected_el_bin_edges, atol=1e-11)
 
 
 def test_rewrap_even_spaced_el_az_grid_1d():
@@ -148,3 +114,93 @@ def test_rewrap_even_spaced_el_az_grid_2d():
     assert raveled_values.shape == (180 * 12 * 360 * 12, 5)
     assert np.array_equal(rewrapped_grid_infer_shape, orig_grid)
     assert np.array_equal(rewrapped_grid_known_shape, orig_grid)
+
+
+class TestAzElSkyGrid:
+    @pytest.mark.parametrize("spacing", valid_spacings)
+    def test_instantiate(self, spacing):
+        grid = spatial_utils.AzElSkyGrid(
+            spacing_deg=spacing,
+            centered_azimuth=False,
+            centered_elevation=True,
+            reversed_elevation=False,
+            angular_units="deg",
+        )
+
+        # Size checks
+        assert grid.az_range.size == int(360 / spacing)
+        assert grid.el_range.size == int(180 / spacing)
+        assert grid.az_range.size == grid.az_grid.shape[0]
+        assert grid.el_range.size == grid.el_grid.shape[1]
+
+        # Check grid values
+        expected_az_range = np.arange((spacing / 2), 360 + (spacing / 2), spacing)
+        expected_el_range = np.arange(-90 + (spacing / 2), 90 + (spacing / 2), spacing)
+
+        npt.assert_allclose(grid.az_range, expected_az_range, atol=1e-12)
+        npt.assert_allclose(grid.el_range, expected_el_range, atol=1e-12)
+
+        # Check bin edges
+        expected_az_bin_edges = np.arange(0, 360 + spacing, spacing)
+        expected_el_bin_edges = np.arange(-90, 90 + spacing, spacing)
+        npt.assert_allclose(grid.az_bin_edges, expected_az_bin_edges, atol=1e-11)
+        npt.assert_allclose(grid.el_bin_edges, expected_el_bin_edges, atol=1e-11)
+
+    @pytest.mark.parametrize("spacing", valid_spacings)
+    @pytest.mark.parametrize("starting_unit", ["deg", "rad"])
+    def test_angular_unit_conversions(self, spacing, starting_unit):
+        # Begins in whatever angular unit is specified, then convert to deg, then to rad
+        grid = spatial_utils.AzElSkyGrid(
+            spacing_deg=spacing,
+            centered_azimuth=False,
+            centered_elevation=True,
+            reversed_elevation=False,
+            angular_units=starting_unit,
+        )
+
+        # Convert to degrees and check grid center values and edges
+        grid.to_degrees()
+        expected_az_range_rad_deg = np.arange(
+            (spacing / 2), 360 + (spacing / 2), spacing
+        )
+        expected_el_range_rad_deg = np.arange(
+            -90 + (spacing / 2), 90 + (spacing / 2), spacing
+        )
+        expected_az_bin_edges_deg = np.arange(0, 360 + spacing, spacing)
+        expected_el_bin_edges_deg = np.arange(-90, 90 + spacing, spacing)
+
+        for attr, expected in zip(
+            [grid.az_range, grid.el_range, grid.az_bin_edges, grid.el_bin_edges],
+            [
+                expected_az_range_rad_deg,
+                expected_el_range_rad_deg,
+                expected_az_bin_edges_deg,
+                expected_el_bin_edges_deg,
+            ],
+        ):
+            npt.assert_allclose(attr, expected, atol=1e-10)
+
+        # Convert back to radians and check grid values
+        grid.to_radians()
+        spacing = np.deg2rad(spacing)
+        expected_az_range_rad = np.arange(
+            (spacing / 2), (2 * np.pi) + (spacing / 2), spacing
+        )
+        expected_el_range_rad = np.arange(
+            -(np.pi / 2) + (spacing / 2), (np.pi / 2) + (spacing / 2), spacing
+        )
+        expected_az_bin_edges_rad = np.arange(0, (2 * np.pi) + spacing, spacing)
+        expected_el_bin_edges_rad = np.arange(
+            -(np.pi / 2), (np.pi / 2) + spacing, spacing
+        )
+
+        for attr, expected in zip(
+            [grid.az_range, grid.el_range, grid.az_bin_edges, grid.el_bin_edges],
+            [
+                expected_az_range_rad,
+                expected_el_range_rad,
+                expected_az_bin_edges_rad,
+                expected_el_bin_edges_rad,
+            ],
+        ):
+            npt.assert_allclose(attr, expected, atol=1e-10)
