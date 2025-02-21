@@ -211,6 +211,9 @@ class AzElSkyGrid:
         self.grid_shape = self.az_grid.shape
         self.grid_size = self.az_grid.size
 
+        # Calculate the solid angle of each pixel
+        self.solid_angle_map = build_solid_angle_map(spacing_deg)
+
     def __repr__(self) -> str:
         """
         Return a string representation of the AzElSkyGrid.

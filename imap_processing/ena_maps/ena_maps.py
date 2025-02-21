@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import pathlib
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from enum import Enum
 
 import numpy as np
@@ -344,6 +345,12 @@ class UltraPointingSet(PointingSet):
         self.az_bin_edges = self.sky_grid.az_bin_edges
         self.el_bin_edges = self.sky_grid.el_bin_edges
 
+        # Store the solid angle of each pixel in the map grid in steradians
+        self.data["solid_angle"] = xr.DataArray(
+            self.sky_grid.solid_angle_map,
+            dims=["azimuth_bin_center", "elevation_bin_center"],
+        )
+
     def __repr__(self) -> str:
         """
         Return a string representation of the UltraPointingSet.
@@ -367,6 +374,17 @@ class AbstractSkyMap(ABC):
     @abstractmethod
     def __init__(self) -> None:
         pass
+
+    def copy(self) -> AbstractSkyMap:
+        """
+        Return a deep copy of the map.
+
+        Returns
+        -------
+        AbstractSkyMap
+            A deep copy of the map.
+        """
+        return deepcopy(self)
 
     def __repr__(self) -> str:
         """
