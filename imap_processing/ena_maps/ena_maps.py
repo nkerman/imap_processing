@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from enum import Enum
 
+import healpy as hp
 import numpy as np
 import xarray as xr
 from numpy.typing import NDArray
@@ -175,29 +176,17 @@ def match_coords_to_indices(
     elif output_object.tiling_type is SkyTilingType.HEALPIX:
         # To match to a Healpix tessellation, we need to use the healpy function ang2pix
         # which directly returns the index on the output frame's Healpix tessellation.
-        """
-        Leaving this as a placeholder for now, so we don't yet
-        need to add a healpy dependency. It will look something like the
-        following code, much simpler than the rectangular case:
-
-        ```python
-        import healpy as hp
         flat_indices_input_grid_output_frame = hp.ang2pix(
-            nside=spatial_object_output_frame.nside,
-            theta=np.rad2deg(obj1_az_el_points_frame2[:, 0]),  # Lon
-            phi=np.rad2deg(obj1_az_el_points_frame2[:, 1]),  # Lat
-            nest=False,
+            nside=output_object.nside,
+            theta=np.rad2deg(input_obj_az_el_output_frame[:, 0]),  # Lon
+            phi=np.rad2deg(input_obj_az_el_output_frame[:, 1]),  # Lat
+            nest=output_object.nested,
             lonlat=True,
         )
-        ```
-        """
-        raise NotImplementedError(
-            "Index matching for output tiling type Healpix is not yet implemented."
-        )
-
     else:
         raise ValueError(
             "Tiling type of the output frame must be either RECTANGULAR or HEALPIX."
+            f"Received: {output_object.tiling_type is SkyTilingType.RECTANGULAR}"
         )
 
     return flat_indices_input_grid_output_frame
@@ -373,7 +362,10 @@ class AbstractSkyMap(ABC):
 
     @abstractmethod
     def __init__(self) -> None:
-        pass
+        self.tiling_type: SkyTilingType
+        self.sky_grid: spatial_utils.AzElSkyGrid
+        self.num_points: int
+        self.data_dict: dict[str, NDArray]
 
     def copy(self) -> AbstractSkyMap:
         """
@@ -385,60 +377,6 @@ class AbstractSkyMap(ABC):
             A deep copy of the map.
         """
         return deepcopy(self)
-
-    def __repr__(self) -> str:
-        """
-        Return a string representation of the map.
-
-        Returns
-        -------
-        str
-            String representation of the map.
-        """
-        return f"{self.__class__} Map)"
-
-
-class RectangularSkyMap(AbstractSkyMap):
-    """
-    Map which tiles the sky with a 2D rectangular grid of azimuth/elevation pixels.
-
-    NOTE: Internally, the map is stored as a 1D array of pixels.
-
-    Parameters
-    ----------
-    spacing_deg : float
-        The spacing of the rectangular grid in degrees.
-    spice_frame : geometry.SpiceFrame
-        The reference Spice frame of the map.
-    """
-
-    def __init__(
-        self,
-        spacing_deg: float,
-        spice_frame: geometry.SpiceFrame,
-    ):
-        # Define the core properties of the map:
-        self.tiling_type = SkyTilingType.RECTANGULAR  # Type of tiling of the sky
-        self.spacing_deg = spacing_deg
-        self.spice_reference_frame = spice_frame
-        self.sky_grid = spatial_utils.AzElSkyGrid(
-            spacing_deg=self.spacing_deg,
-        )
-
-        # Solid angles of each pixel in the map grid in units of steradians
-        self.solid_angle_grid = spatial_utils.build_solid_angle_map(
-            spacing_deg=self.spacing_deg,
-        )
-
-        # Unwrap the az, el, solid angle grids to series of points tiling the sky
-        az_points = self.sky_grid.az_grid.ravel()
-        el_points = self.sky_grid.el_grid.ravel()
-        self.az_el_points = np.column_stack((az_points, el_points))
-        self.solid_angle_points = self.solid_angle_grid.ravel()
-        self.num_points = self.az_el_points.shape[0]
-
-        # Initialize empty data dictionary to store map data
-        self.data_dict: dict[str, NDArray] = {}
 
     def project_pset_values_to_map(
         self,
@@ -496,6 +434,19 @@ class RectangularSkyMap(AbstractSkyMap):
             if pset_key not in pointing_set.data.data_vars:
                 raise ValueError(f"Value key {pset_key} not found in pointing set.")
 
+        # Determine the shape of the grid onto which values
+        # are projected in the binning step.
+        projection_grid_shape_: tuple[int, ...]  # To appease mypy
+        if self.tiling_type is SkyTilingType.HEALPIX:
+            # For Healpix, the projection grid shape is 1D
+            projection_grid_shape_ = (self.num_points,)
+        elif self.tiling_type is SkyTilingType.RECTANGULAR:
+            # For rectangular grid, the projection grid shape is 2D
+            projection_grid_shape_ = (
+                len(self.sky_grid.az_bin_midpoints),
+                len(self.sky_grid.el_bin_midpoints),
+            )
+
         for pset_key, map_key in zip(pset_value_keys, skymap_value_keys):
             # If multiple spatial axes present
             # (i.e (az, el) for rectangular coordinate PSET),
@@ -515,12 +466,10 @@ class RectangularSkyMap(AbstractSkyMap):
                     input_object=pointing_set,
                     output_object=self,
                 )
+
                 pointing_projected_values = map_utils.bin_single_array_at_indices(
                     value_array=raveled_pset_data,
-                    projection_grid_shape=(
-                        len(self.sky_grid.az_bin_midpoints),
-                        len(self.sky_grid.el_bin_midpoints),
-                    ),
+                    projection_grid_shape=projection_grid_shape_,
                     projection_indices=matched_indices_push,
                 )
             elif index_match_method is IndexMatchMethod.PULL:
@@ -534,6 +483,60 @@ class RectangularSkyMap(AbstractSkyMap):
                     "Only PUSH and PULL index matching methods are supported."
                 )
             self.data_dict[map_key] += pointing_projected_values
+
+    def __repr__(self) -> str:
+        """
+        Return a string representation of the map.
+
+        Returns
+        -------
+        str
+            String representation of the map.
+        """
+        return f"{self.__class__} Map)"
+
+
+class RectangularSkyMap(AbstractSkyMap):
+    """
+    Map which tiles the sky with a 2D rectangular grid of azimuth/elevation pixels.
+
+    NOTE: Internally, the map is stored as a 1D array of pixels.
+
+    Parameters
+    ----------
+    spacing_deg : float
+        The spacing of the rectangular grid in degrees.
+    spice_frame : geometry.SpiceFrame
+        The reference Spice frame of the map.
+    """
+
+    def __init__(
+        self,
+        spacing_deg: float,
+        spice_frame: geometry.SpiceFrame,
+    ):
+        # Define the core properties of the map:
+        self.tiling_type = SkyTilingType.RECTANGULAR  # Type of tiling of the sky
+        self.spacing_deg = spacing_deg
+        self.spice_reference_frame = spice_frame
+        self.sky_grid = spatial_utils.AzElSkyGrid(
+            spacing_deg=self.spacing_deg,
+        )
+
+        # Solid angles of each pixel in the map grid in units of steradians
+        self.solid_angle_grid = spatial_utils.build_solid_angle_map(
+            spacing_deg=self.spacing_deg,
+        )
+
+        # Unwrap the az, el, solid angle grids to series of points tiling the sky
+        az_points = self.sky_grid.az_grid.ravel()
+        el_points = self.sky_grid.el_grid.ravel()
+        self.az_el_points = np.column_stack((az_points, el_points))
+        self.solid_angle_points = self.solid_angle_grid.ravel()
+        self.num_points = self.az_el_points.shape[0]
+
+        # Initialize empty data dictionary to store map data
+        self.data_dict: dict[str, NDArray] = {}
 
     def to_dataset(
         self,
@@ -604,8 +607,40 @@ class RectangularSkyMap(AbstractSkyMap):
         )
 
 
-# TODO:
-# Add pulling index matching in match_pset_coords_to_indices
+class HealpixSkyMap(AbstractSkyMap):
+    """
+    Map which tiles the sky with a Healpix tessellation.
+
+    Parameters
+    ----------
+    nside : int
+        The nside parameter of the Healpix tessellation.
+    spice_frame : geometry.SpiceFrame
+        The reference Spice frame of the map.
+    nested : bool, optional
+        Whether the Healpix tessellation is nested. Default is False.
+    """
+
+    def __init__(
+        self, nside: int, spice_frame: geometry.SpiceFrame, nested: bool = False
+    ):
+        # Define the core properties of the map:
+        self.tiling_type = SkyTilingType.HEALPIX
+        self.spice_reference_frame = spice_frame
+        self.nside = nside
+        self.num_points = hp.nside2npix(nside)
+        pixel_az, pixel_el = np.deg2rad(
+            hp.pix2ang(
+                nside=nside, ipix=np.arange(self.num_points), nest=nested, lonlat=True
+            )
+        )
+        self.az_el_points = np.column_stack((pixel_az, pixel_el))
+        self.solid_angle = hp.nside2pixarea(nside, degrees=False)
+        self.solid_angle_points = np.full(self.num_points, self.solid_angle)
+        self.resol = hp.nside2resol(nside, arcmin=False)
+        self.data_dict: dict[str, NDArray] = {}
+        self.nested = nested
+
 
 # TODO:
 # Check units of time which will be read in. Do we need to add j2000ns_to_j2000s?
