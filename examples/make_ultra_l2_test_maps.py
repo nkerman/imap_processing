@@ -4,8 +4,9 @@
 from os import environ, path
 from pathlib import Path
 
-import healpy as hp_vis
+import matplotlib.pyplot as plt
 import numpy as np
+from healpy.visufunc import mollview
 
 from imap_processing.cdf.utils import write_cdf
 from imap_processing.ena_maps import ena_maps
@@ -56,7 +57,9 @@ fake_l1c_products_ultra = [
 ]
 
 # %% Visualize the fake L1c products
-hp_vis.mollview(fake_l1c_products_ultra[1]["counts"][0, 0])
+i = 1
+mollview(fake_l1c_products_ultra[i]["counts"][0, 0], title=f"Counts from PSET {i}")
+plt.show()
 # %%
 # Add some additional metadata to the fake L1c products
 for pset in fake_l1c_products_ultra:
@@ -107,25 +110,8 @@ rect_output_map_structure = ena_maps.AbstractSkyMap.from_properties_dict(
 ] = ultra_l2.ultra_l2(
     data_dict=data_dict,
 )
+
 print(hp_map_ds)
-
-# %%
-simple_pset_date_range = np.nanstd(
-    [p["epoch"].values[0] for p in fake_l1c_products_ultra]
-)
-
-print(
-    f"Simple PSET date range: {simple_pset_date_range} = \
-{simple_pset_date_range / (86400 * 1e9)} days"
-)
-
-mean_obs_date_range = hp_map_ds["obs_date_range"].mean().values
-print(
-    f"Mean observation date range: {mean_obs_date_range}"
-    f"= {mean_obs_date_range / (86400 * 1e9)} days"
-)
-
-hp_vis.mollview((hp_map_ds["obs_date_range"])[0, 0])
 # %%
 for name in [
     "flux",
@@ -138,12 +124,23 @@ for name in [
     "background_rates",
     "num_pointing_set_pixel_members",
     "obs_date",
+    "obs_date_range",
     "pointing_set_exposure_times_solid_angle",
 ]:
     try:
         da = hp_map_ds[name]
         dims_to_mean = [dim for dim in da.dims if "epoch" in dim or "energy" in dim]
         plot_val = da.mean(dim=dims_to_mean)
-        hp_vis.mollview(plot_val, max=np.quantile(plot_val, 0.98), title=name)
+        mollview(
+            plot_val,
+            max=np.quantile(plot_val, 0.98),
+            title=f"{name} of map, mean-ed over epochs and energy if present",
+        )
+        plt.show()
     except KeyError:
-        print(f"KeyError: {name} not in hp_map_ds")
+        print(
+            f"KeyError during plotting: {name} not in hp_map_ds.\
+You can probably ignore this."
+        )
+
+# %%
